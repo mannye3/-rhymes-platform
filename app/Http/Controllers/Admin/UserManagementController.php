@@ -201,4 +201,47 @@ class UserManagementController extends Controller
 
         return back()->with('success', 'Password reset successfully!');
     }
+
+    public function sendVerificationEmail(User $user)
+    {
+        try {
+            if ($user->email_verified_at) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is already verified!'
+                ]);
+            }
+
+            $user->sendEmailVerificationNotification();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification email sent successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function loginAsUser(User $user)
+    {
+        try {
+            // Store the original admin user ID in session
+            session(['original_admin_id' => auth()->id()]);
+            
+            // Login as the target user
+            auth()->login($user);
+
+            return redirect()->route('dashboard')
+                ->with('success', "You are now logged in as {$user->name}. You can switch back from the user menu.");
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to login as user: ' . $e->getMessage());
+        }
+    }
 }

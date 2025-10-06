@@ -10,6 +10,10 @@ use App\Http\Controllers\Admin\BookReviewController;
 use App\Http\Controllers\Admin\PayoutManagementController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Author\AuthorProfileController;
 
@@ -58,6 +62,8 @@ Route::middleware('auth')->group(function () {
             Route::delete('users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
             Route::post('users/{user}/promote-author', [UserManagementController::class, 'promoteToAuthor'])->name('users.promote-author');
             Route::post('users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
+            Route::post('users/{user}/send-verification', [UserManagementController::class, 'sendVerificationEmail'])->name('users.send-verification');
+            Route::get('users/{user}/login-as', [UserManagementController::class, 'loginAsUser'])->name('users.login-as');
             
             // Book Management
             Route::get('books', [BookReviewController::class, 'index'])->name('books.index');
@@ -74,13 +80,30 @@ Route::middleware('auth')->group(function () {
             Route::get('payouts/{payout}', [PayoutManagementController::class, 'show'])->name('payouts.show');
             Route::patch('payouts/{payout}/approve', [PayoutManagementController::class, 'approve'])->name('payouts.approve');
             Route::patch('payouts/{payout}/deny', [PayoutManagementController::class, 'deny'])->name('payouts.deny');
+            Route::post('payouts/bulk-action', [PayoutManagementController::class, 'bulkAction'])->name('payouts.bulk-action');
             
             // Reports & Analytics
-            Route::get('reports/sales', function() { return view('admin.reports.sales'); })->name('reports.sales');
-            Route::get('reports/analytics', function() { return view('admin.reports.analytics'); })->name('reports.analytics');
+            Route::get('reports/sales', [ReportsController::class, 'sales'])->name('reports.sales');
+            Route::get('reports/analytics', [ReportsController::class, 'analytics'])->name('reports.analytics');
             
             // Settings
-            Route::get('settings', function() { return view('admin.settings'); })->name('settings');
+            Route::get('settings', [SettingsController::class, 'index'])->name('settings');
+            Route::post('settings', [SettingsController::class, 'update'])->name('settings.update');
+            Route::post('settings/clear-cache', [SettingsController::class, 'clearCache'])->name('settings.clear-cache');
+            Route::post('settings/test-email', [SettingsController::class, 'testEmail'])->name('settings.test-email');
+            
+            // Notifications
+            Route::get('notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
+            Route::post('notifications', [AdminNotificationController::class, 'store'])->name('notifications.store');
+            Route::post('notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+            Route::post('authors/send-message', [AdminNotificationController::class, 'sendMessage'])->name('authors.send-message');
+            
+            // Admin Profile
+            Route::get('profile', [AdminProfileController::class, 'index'])->name('profile.index');
+            Route::put('profile', [AdminProfileController::class, 'update'])->name('profile.update');
+            Route::put('profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
+            Route::put('profile/notifications', [AdminProfileController::class, 'updateNotifications'])->name('profile.notifications');
+            Route::post('profile/export-data', [AdminProfileController::class, 'exportData'])->name('profile.export-data');
         });
     });
     // Notification routes

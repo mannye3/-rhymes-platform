@@ -118,4 +118,47 @@ class PayoutManagementController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,deny',
+            'payout_ids' => 'required|array',
+            'payout_ids.*' => 'exists:payouts,id',
+        ]);
+
+        try {
+            $payouts = Payout::whereIn('id', $request->payout_ids)->get();
+            $admin = auth()->user();
+            $successCount = 0;
+
+            foreach ($payouts as $payout) {
+                if ($payout->status !== 'pending') {
+                    continue;
+                }
+
+                if ($request->action === 'approve') {
+                    $result = $this->payoutManagementService->approvePayout($payout, 'Bulk approval', $admin);
+                } else {
+                    $result = $this->payoutManagementService->denyPayout($payout, 'Bulk denial', $admin);
+                }
+
+                if ($result) {
+                    $successCount++;
+                }
+            }
+
+            $actionText = $request->action === 'approve' ? 'approved' : 'denied';
+            return response()->json([
+                'success' => true,
+                'message' => "{$successCount} payout(s) {$actionText} successfully!"
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk action failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -137,6 +137,13 @@
                                         <span class="nk-menu-text">Settings</span>
                                     </a>
                                 </li><!-- .nk-menu-item -->
+                                
+                                <li class="nk-menu-item">
+                                    <a href="{{ route('admin.notifications.index') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-bell-fill"></em></span>
+                                        <span class="nk-menu-text">Notifications</span>
+                                    </a>
+                                </li><!-- .nk-menu-item -->
                             </ul><!-- .nk-menu -->
                         </div><!-- .nk-sidebar-menu -->
                     </div><!-- .nk-sidebar-content -->
@@ -199,9 +206,9 @@
                                             </div>
                                             <div class="dropdown-inner">
                                                 <ul class="link-list">
-                                                    <li><a href=""><em class="icon ni ni-user-alt"></em><span>View Profile</span></a></li>
-                                                    <li><a href=""><em class="icon ni ni-setting-alt"></em><span>Account Setting</span></a></li>
-                                                    <li><a href=""><em class="icon ni ni-activity-alt"></em><span>Switch to Author</span></a></li>
+                                                    <li><a href="{{ route('admin.profile.index') }}"><em class="icon ni ni-user-alt"></em><span>View Profile</span></a></li>
+                                                    <li><a href="{{ route('admin.settings') }}"><em class="icon ni ni-setting-alt"></em><span>Account Setting</span></a></li>
+                                                    <li><a href="/author/dashboard"><em class="icon ni ni-activity-alt"></em><span>Switch to Author</span></a></li>
                                                 </ul>
                                             </div>
                                             <div class="dropdown-inner">
