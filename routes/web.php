@@ -15,20 +15,40 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Author\AuthorController;
 use App\Http\Controllers\Author\AuthorProfileController;
-
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+        
+        // Redirect based on user role
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->hasRole('author')) {
+            return redirect()->route('author.dashboard');
+        }
+        
+        // Default dashboard for regular users
+        return view('dashboard');
+    })->name('dashboard');
+    
+    // Notifications
+    Route::get('/notifications/unread', [NotificationController::class, 'unread'])->name('notifications.unread');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/toggle-dark-mode', [NotificationController::class, 'toggleDarkMode'])->name('toggle-dark-mode');
     
     // Author routes
     Route::middleware('role:author')->group(function () {
         Route::prefix('author')->name('author.')->group(function () {
-            Route::resource('books', BookController::class);
+            // Dashboard
+            Route::get('/', [AuthorController::class, 'dashboard'])->name('dashboard');
             
+            Route::resource('books', BookController::class);
             Route::get('wallet', [WalletController::class, 'index'])->name('wallet.index');
             Route::get('wallet/export', [WalletController::class, 'export'])->name('wallet.export');
             Route::get('payouts', [PayoutController::class, 'index'])->name('payouts.index');

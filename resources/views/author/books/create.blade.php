@@ -1,113 +1,175 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Submit New Book') }}
-        </h2>
-    </x-slot>
+@extends('layouts.author')
+@section('title', 'Create Book | Rhymes Author Platform')
+@section('page-title', 'Create New Book')
+@section('page-description', 'Submit your book for review')
 
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <form method="POST" action="{{ route('author.books.store') }}">
-                        @csrf
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- ISBN -->
-                            <div>
-                                <x-input-label for="isbn" :value="__('ISBN')" />
-                                <x-text-input id="isbn" class="block mt-1 w-full" type="text" name="isbn" :value="old('isbn')" required />
-                                <x-input-error :messages="$errors->get('isbn')" class="mt-2" />
-                                <p class="text-sm text-gray-600 mt-1">Enter the 13-digit ISBN of your book</p>
-                            </div>
-
-                            <!-- Title -->
-                            <div>
-                                <x-input-label for="title" :value="__('Book Title')" />
-                                <x-text-input id="title" class="block mt-1 w-full" type="text" name="title" :value="old('title')" required />
-                                <x-input-error :messages="$errors->get('title')" class="mt-2" />
-                            </div>
-
-                            <!-- Genre -->
-                            <div>
-                                <x-input-label for="genre" :value="__('Genre')" />
-                                <select id="genre" name="genre" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                                    <option value="">Select Genre</option>
-                                    <option value="Fiction" {{ old('genre') == 'Fiction' ? 'selected' : '' }}>Fiction</option>
-                                    <option value="Non-Fiction" {{ old('genre') == 'Non-Fiction' ? 'selected' : '' }}>Non-Fiction</option>
-                                    <option value="Romance" {{ old('genre') == 'Romance' ? 'selected' : '' }}>Romance</option>
-                                    <option value="Mystery" {{ old('genre') == 'Mystery' ? 'selected' : '' }}>Mystery</option>
-                                    <option value="Thriller" {{ old('genre') == 'Thriller' ? 'selected' : '' }}>Thriller</option>
-                                    <option value="Science Fiction" {{ old('genre') == 'Science Fiction' ? 'selected' : '' }}>Science Fiction</option>
-                                    <option value="Fantasy" {{ old('genre') == 'Fantasy' ? 'selected' : '' }}>Fantasy</option>
-                                    <option value="Biography" {{ old('genre') == 'Biography' ? 'selected' : '' }}>Biography</option>
-                                    <option value="Self-Help" {{ old('genre') == 'Self-Help' ? 'selected' : '' }}>Self-Help</option>
-                                    <option value="Business" {{ old('genre') == 'Business' ? 'selected' : '' }}>Business</option>
-                                    <option value="Other" {{ old('genre') == 'Other' ? 'selected' : '' }}>Other</option>
-                                </select>
-                                <x-input-error :messages="$errors->get('genre')" class="mt-2" />
-                            </div>
-
-                            <!-- Price -->
-                            <div>
-                                <x-input-label for="price" :value="__('Price ($)')" />
-                                <x-text-input id="price" class="block mt-1 w-full" type="number" name="price" :value="old('price')" step="0.01" min="0" required />
-                                <x-input-error :messages="$errors->get('price')" class="mt-2" />
-                            </div>
-
-                            <!-- Book Type -->
-                            <div class="md:col-span-2">
-                                <x-input-label for="book_type" :value="__('Book Type')" />
-                                <div class="mt-2 space-y-2">
-                                    <label class="inline-flex items-center">
-                                        <input type="radio" name="book_type" value="physical" {{ old('book_type') == 'physical' ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                        <span class="ml-2">Physical Book Only</span>
-                                    </label>
-                                    <label class="inline-flex items-center">
-                                        <input type="radio" name="book_type" value="digital" {{ old('book_type') == 'digital' ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                        <span class="ml-2">Digital Book Only</span>
-                                    </label>
-                                    <label class="inline-flex items-center">
-                                        <input type="radio" name="book_type" value="both" {{ old('book_type') == 'both' ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                        <span class="ml-2">Both Physical and Digital</span>
-                                    </label>
-                                </div>
-                                <x-input-error :messages="$errors->get('book_type')" class="mt-2" />
-                            </div>
+@section('content')
+<div class="nk-content nk-content-fluid">
+    <div class="container-xl wide-xl">
+        <div class="nk-content-body">
+            <div class="nk-block-head nk-block-head-sm">
+                <div class="nk-block-between g-3">
+                    <div class="nk-block-head-content">
+                        <h3 class="nk-block-title page-title">Create New Book</h3>
+                        <div class="nk-block-des text-soft">
+                            <p>Submit your book for review and approval</p>
                         </div>
-
-                        <!-- Description -->
-                        <div class="mt-6">
-                            <x-input-label for="description" :value="__('Book Description')" />
-                            <textarea id="description" name="description" rows="6" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>{{ old('description') }}</textarea>
-                            <x-input-error :messages="$errors->get('description')" class="mt-2" />
-                            <p class="text-sm text-gray-600 mt-1">Provide a detailed description of your book, including plot summary, target audience, and key themes.</p>
-                        </div>
-
-                        <div class="flex items-center justify-end mt-6 space-x-4">
-                            <a href="{{ route('author.books.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                Cancel
-                            </a>
-                            <x-primary-button>
-                                {{ __('Submit Book for Review') }}
-                            </x-primary-button>
-                        </div>
-                    </form>
+                    </div>
+                    <div class="nk-block-head-content">
+                        <a href="{{ route('author.books.index') }}" class="btn btn-outline-light">
+                            <em class="icon ni ni-arrow-left"></em><span>Back to Books</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Information Panel -->
-            <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-blue-900 mb-3">Submission Guidelines</h3>
-                <ul class="text-blue-800 space-y-2">
-                    <li>• Ensure your book has a valid ISBN-13</li>
-                    <li>• Provide accurate pricing information</li>
-                    <li>• Write a compelling description that highlights your book's unique value</li>
-                    <li>• Once submitted, our team will review your book within 5-7 business days</li>
-                    <li>• You'll receive email notifications about status changes</li>
-                    <li>• Accepted books will be integrated with our inventory system</li>
-                </ul>
+            <div class="nk-block">
+                <div class="row g-gs">
+                    <div class="col-lg-8">
+                        <div class="card card-bordered">
+                            <div class="card-inner">
+                                <form action="{{ route('author.books.store') }}" method="POST">
+                                    @csrf
+                                    
+                                    <div class="nk-block-head">
+                                        <h5 class="title">Book Information</h5>
+                                    </div>
+                                    
+                                    <div class="row gy-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label" for="isbn">ISBN <span class="text-danger">*</span></label>
+                                                <div class="form-control-wrap">
+                                                    <input type="text" class="form-control @error('isbn') error @enderror" 
+                                                           id="isbn" name="isbn" value="{{ old('isbn') }}" required>
+                                                    @error('isbn')
+                                                        <span class="form-note-error">{{ $message }}</span>
+                                                    @enderror
+                                                    <div class="form-note">Enter the 13-digit ISBN of your book</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label" for="title">Book Title <span class="text-danger">*</span></label>
+                                                <div class="form-control-wrap">
+                                                    <input type="text" class="form-control @error('title') error @enderror" 
+                                                           id="title" name="title" value="{{ old('title') }}" required>
+                                                    @error('title')
+                                                        <span class="form-note-error">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label" for="genre">Genre <span class="text-danger">*</span></label>
+                                                <div class="form-control-wrap">
+                                                    <select class="form-select @error('genre') error @enderror" id="genre" name="genre" required>
+                                                        <option value="">Select Genre</option>
+                                                        <option value="Fiction" {{ old('genre') == 'Fiction' ? 'selected' : '' }}>Fiction</option>
+                                                        <option value="Non-Fiction" {{ old('genre') == 'Non-Fiction' ? 'selected' : '' }}>Non-Fiction</option>
+                                                        <option value="Mystery" {{ old('genre') == 'Mystery' ? 'selected' : '' }}>Mystery</option>
+                                                        <option value="Romance" {{ old('genre') == 'Romance' ? 'selected' : '' }}>Romance</option>
+                                                        <option value="Sci-Fi" {{ old('genre') == 'Sci-Fi' ? 'selected' : '' }}>Science Fiction</option>
+                                                        <option value="Fantasy" {{ old('genre') == 'Fantasy' ? 'selected' : '' }}>Fantasy</option>
+                                                        <option value="Biography" {{ old('genre') == 'Biography' ? 'selected' : '' }}>Biography</option>
+                                                        <option value="Business" {{ old('genre') == 'Business' ? 'selected' : '' }}>Business</option>
+                                                        <option value="Self-Help" {{ old('genre') == 'Self-Help' ? 'selected' : '' }}>Self-Help</option>
+                                                        <option value="Health" {{ old('genre') == 'Health' ? 'selected' : '' }}>Health</option>
+                                                        <option value="History" {{ old('genre') == 'History' ? 'selected' : '' }}>History</option>
+                                                        <option value="Travel" {{ old('genre') == 'Travel' ? 'selected' : '' }}>Travel</option>
+                                                    </select>
+                                                    @error('genre')
+                                                        <span class="form-note-error">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label" for="price">Price ($) <span class="text-danger">*</span></label>
+                                                <div class="form-control-wrap">
+                                                    <input type="number" step="0.01" min="0" class="form-control @error('price') error @enderror" 
+                                                           id="price" name="price" value="{{ old('price') }}" required>
+                                                    @error('price')
+                                                        <span class="form-note-error">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label" for="book_type">Book Type <span class="text-danger">*</span></label>
+                                                <div class="form-control-wrap">
+                                                    <select class="form-select @error('book_type') error @enderror" id="book_type" name="book_type" required>
+                                                        <option value="">Select Type</option>
+                                                        <option value="physical" {{ old('book_type') == 'physical' ? 'selected' : '' }}>Physical Only</option>
+                                                        <option value="digital" {{ old('book_type') == 'digital' ? 'selected' : '' }}>Digital Only</option>
+                                                        <option value="both" {{ old('book_type') == 'both' ? 'selected' : '' }}>Both Physical & Digital</option>
+                                                    </select>
+                                                    @error('book_type')
+                                                        <span class="form-note-error">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <label class="form-label" for="description">Description <span class="text-danger">*</span></label>
+                                                <div class="form-control-wrap">
+                                                    <textarea class="form-control @error('description') error @enderror" 
+                                                              id="description" name="description" rows="4" required>{{ old('description') }}</textarea>
+                                                    @error('description')
+                                                        <span class="form-note-error">{{ $message }}</span>
+                                                    @enderror
+                                                    <div class="form-note">Provide a detailed description of your book</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <em class="icon ni ni-save"></em><span>Submit Book</span>
+                                                </button>
+                                                <a href="{{ route('author.books.index') }}" class="btn btn-outline-light">Cancel</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="card card-bordered">
+                            <div class="card-inner">
+                                <div class="nk-block-head">
+                                    <h5 class="title">Submission Guidelines</h5>
+                                </div>
+                                <div class="nk-block">
+                                    <ul class="list list-sm list-checked">
+                                        <li>Ensure your ISBN is valid and unique</li>
+                                        <li>Provide an accurate and compelling description</li>
+                                        <li>Set a competitive price for your book</li>
+                                        <li>Choose the appropriate genre</li>
+                                        <li>Your book will be reviewed within 3-5 business days</li>
+                                    </ul>
+                                </div>
+                                <div class="nk-block">
+                                    <div class="alert alert-info">
+                                        <div class="alert-cta">
+                                            <h6>Need Help?</h6>
+                                            <p>Contact our support team if you need assistance with your book submission.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

@@ -7,6 +7,7 @@
     <meta name="author" content="Softnio">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Fav Icon  -->
     <link rel="shortcut icon" href="./images/favicon.png">
     <!-- Page Title  -->
@@ -14,6 +15,7 @@
     <!-- StyleSheets  -->
     <link rel="stylesheet" href="{{ asset('assets/css/dashlite.css?ver=3.2.3') }}">
     <link id="skin-default" rel="stylesheet" href="{{ asset('assets/css/theme.css?ver=3.2.3') }}">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -180,6 +182,42 @@
                             </div><!-- .nk-header-news -->
                             <div class="nk-header-tools">
                                 <ul class="nk-quick-nav">
+                                    <!-- Dark Mode Toggle -->
+                                    <li class="dropdown">
+                                        <a href="#" id="darkModeToggle" class="nk-quick-nav-icon">
+                                            <div class="quick-icon">
+                                                <em id="darkModeIcon" class="icon ni ni-moon"></em>
+                                            </div>
+                                        </a>
+                                    </li>
+                                   
+                                    <li class="dropdown notification-dropdown">
+                                        <a href="#" class="dropdown-toggle nk-quick-nav-icon" data-bs-toggle="dropdown">
+                                            <div class="icon-status icon-status-info">
+                                                <em class="icon ni ni-bell"></em>
+                                                <span class="notification-badge" style="display: none;">0</span>
+                                            </div>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-xl dropdown-menu-end">
+                                            <div class="dropdown-head">
+                                                <span class="sub-title nk-dropdown-title">Admin Notifications</span>
+                                                <a href="#" id="markAllAsRead">Mark All as Read</a>
+                                            </div>
+                                            <div class="dropdown-body">
+                                                <div class="nk-notification" id="notificationsList">
+                                                    <div class="nk-notification-item text-center py-4">
+                                                        <div class="nk-notification-content">
+                                                            <div class="nk-notification-text text-muted">Loading notifications...</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="dropdown-foot center">
+                                                <a href="#">View All</a>
+                                            </div>
+                                        </div>
+                                    </li>
+
                                     <li class="dropdown user-dropdown">
                                         <a href="#" class="dropdown-toggle me-n1" data-bs-toggle="dropdown">
                                             <div class="user-toggle">
@@ -196,7 +234,11 @@
                                             <div class="dropdown-inner user-card-wrap bg-lighter d-none d-md-block">
                                                 <div class="user-card">
                                                     <div class="user-avatar">
-                                                        <span>{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
+                                                        @if(auth()->user()->avatar)
+                                                            <img src="{{ asset('storage/images/avatar/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}">
+                                                        @else
+                                                            <span>{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
+                                                        @endif
                                                     </div>
                                                     <div class="user-info">
                                                         <span class="lead-text">{{ auth()->user()->name }}</span>
@@ -207,8 +249,12 @@
                                             <div class="dropdown-inner">
                                                 <ul class="link-list">
                                                     <li><a href="{{ route('admin.profile.index') }}"><em class="icon ni ni-user-alt"></em><span>View Profile</span></a></li>
-                                                    <li><a href="{{ route('admin.settings') }}"><em class="icon ni ni-setting-alt"></em><span>Account Setting</span></a></li>
-                                                    <li><a href="/author/dashboard"><em class="icon ni ni-activity-alt"></em><span>Switch to Author</span></a></li>
+                                                    <li><a href="{{ route('admin.settings') }}"><em class="icon ni ni-setting-alt"></em><span>Account Settings</span></a></li>
+                                                    <li><a href="#" id="loginActivityLink"><em class="icon ni ni-activity-alt"></em><span>Login Activity</span></a></li>
+                                                    <li><a href="#" id="darkModeToggleProfile"><em class="icon ni ni-moon"></em><span>Dark Mode</span></a></li>
+                                                    @if(auth()->user()->hasRole('author'))
+                                                        <li><a href="/author/dashboard"><em class="icon ni ni-swap-alt"></em><span>Switch to Author</span></a></li>
+                                                    @endif
                                                 </ul>
                                             </div>
                                             <div class="dropdown-inner">
@@ -275,6 +321,9 @@
     <script src="{{ asset('assets/js/bundle.js?ver=3.2.3') }}"></script>
     <script src="{{ asset('assets/js/scripts.js?ver=3.2.3') }}"></script>
     <script src="{{ asset('assets/js/charts/chart-ecommerce.js?ver=3.2.3') }}"></script>
+    
+    <!-- Notifications Script -->
+    <script src="{{ asset('js/notifications.js') }}"></script>
     
     @stack('scripts')
 </body>
