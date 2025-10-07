@@ -2,26 +2,19 @@
 
 namespace App\Services\Admin;
 
-use App\Repositories\Contracts\PayoutRepositoryInterface;
-use App\Repositories\Contracts\WalletTransactionRepositoryInterface;
 use App\Models\Payout;
+use App\Models\WalletTransaction;
 use App\Models\User;
 use App\Notifications\PayoutStatusChanged;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class PayoutManagementService
 {
-    public function __construct(
-        private PayoutRepositoryInterface $payoutRepository,
-        private WalletTransactionRepositoryInterface $walletTransactionRepository
-    ) {}
-
     /**
      * Get paginated payouts for admin review
      */
     public function getPayoutsForReview(): LengthAwarePaginator
     {
-        // For now, direct query - could be moved to repository if needed
         return Payout::with('user')->latest()->paginate(15);
     }
 
@@ -37,7 +30,10 @@ class PayoutManagementService
         $oldStatus = $payout->status;
         
         // Update payout status
-        $updated = $this->payoutRepository->updateStatus($payout, 'approved', $adminNotes);
+        $updated = $payout->update([
+            'status' => 'approved',
+            'admin_notes' => $adminNotes
+        ]);
         
         if ($updated) {
             // Update processed timestamp
@@ -69,7 +65,10 @@ class PayoutManagementService
         $oldStatus = $payout->status;
         
         // Update payout status
-        $updated = $this->payoutRepository->updateStatus($payout, 'denied', $adminNotes);
+        $updated = $payout->update([
+            'status' => 'denied',
+            'admin_notes' => $adminNotes
+        ]);
         
         if ($updated) {
             // Update processed timestamp
@@ -87,7 +86,7 @@ class PayoutManagementService
      */
     private function createPayoutTransaction(Payout $payout, User $admin): void
     {
-        $this->walletTransactionRepository->create([
+        WalletTransaction::create([
             'user_id' => $payout->user_id,
             'type' => 'payout',
             'amount' => -$payout->amount_requested,
@@ -121,6 +120,6 @@ class PayoutManagementService
      */
     public function getAllPendingPayouts()
     {
-        return $this->payoutRepository->getAllPending();
+        return Payout::where('status', 'pending')->get();
     }
 }

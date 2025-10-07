@@ -91,9 +91,40 @@ class BookController extends Controller
     public function destroy(Book $book)
     {
         $this->authorize('delete', $book);
+        
+        // Check if book has any transactions before deleting
+        if ($book->walletTransactions()->count() > 0) {
+            return redirect()->route('author.books.index')
+                ->with('error', 'Cannot delete book with existing transactions.');
+        }
+        
         $this->bookService->deleteBook($book);
 
         return redirect()->route('author.books.index')
             ->with('success', 'Book deleted successfully!');
+    }
+
+    /**
+     * Restore a soft deleted book
+     */
+    public function restore($id)
+    {
+        $book = $this->bookService->getBookByIdWithTrashed($id);
+        
+        if (!$book) {
+            return redirect()->route('author.books.index')
+                ->with('error', 'Book not found.');
+        }
+        
+        $this->authorize('delete', $book);
+        
+        if ($book->trashed()) {
+            $this->bookService->restoreBook($book);
+            return redirect()->route('author.books.index')
+                ->with('success', 'Book restored successfully!');
+        }
+        
+        return redirect()->route('author.books.index')
+            ->with('error', 'Book is not deleted.');
     }
 }

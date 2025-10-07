@@ -24,8 +24,8 @@
                             <div class="toggle-expand-content" data-content="pageMenu">
                                 <ul class="nk-block-tools g-3">
                                     @if($book->status === 'pending')
-                                        <li><a href="#" class="btn btn-success" onclick="reviewBook({{ $book->id }}, 'accepted')"><em class="icon ni ni-check"></em><span>Approve</span></a></li>
-                                        <li><a href="#" class="btn btn-danger" onclick="reviewBook({{ $book->id }}, 'rejected')"><em class="icon ni ni-cross"></em><span>Reject</span></a></li>
+                                        <li><a href="javascript:void(0)" class="btn btn-success" onclick="reviewBook({{ $book->id }}, 'accepted'); return false;"><em class="icon ni ni-check"></em><span>Approve</span></a></li>
+                                        <li><a href="javascript:void(0)" class="btn btn-danger" onclick="reviewBook({{ $book->id }}, 'rejected'); return false;"><em class="icon ni ni-cross"></em><span>Reject</span></a></li>
                                     @endif
                                     <li><a href="{{ route('admin.books.index') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-arrow-left"></em><span>Back to Books</span></a></li>
                                 </ul>
@@ -347,6 +347,9 @@
 @push('scripts')
 <script>
 function reviewBook(bookId, status) {
+    // Prevent default action
+    event.preventDefault();
+    
     document.getElementById('bookId').value = bookId;
     document.getElementById('reviewStatus').value = status;
     
@@ -364,19 +367,60 @@ function reviewBook(bookId, status) {
 }
 
 function submitReview() {
-    const form = document.getElementById('reviewForm');
-    const formData = new FormData(form);
-    const bookId = formData.get('book_id');
+    // Prevent default action
+    event.preventDefault();
+    
+    // Get the values directly from the hidden fields
+    const bookId = document.getElementById('bookId').value;
+    const status = document.getElementById('reviewStatus').value;
+    const adminNotes = document.querySelector('textarea[name="admin_notes"]').value;
+    const revBookId = document.querySelector('input[name="rev_book_id"]').value;
+    
+    // Validate that we have the required data
+    if (!bookId || !status) {
+        Swal.fire('Error!', 'Missing required data.', 'error');
+        return;
+    }
+    
+    // Log the data being sent
+    console.log('Sending review data:', {
+        book_id: bookId,
+        status: status,
+        admin_notes: adminNotes,
+        rev_book_id: revBookId
+    });
+    
+    // Create the data object
+    const data = {
+        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        book_id: bookId,
+        status: status
+    };
+    
+    // Add optional fields if they have values
+    if (adminNotes) data.admin_notes = adminNotes;
+    if (revBookId) data.rev_book_id = revBookId;
+    
+    // Convert to FormData
+    const formData = new FormData();
+    for (const key in data) {
+        formData.append(key, data[key]);
+    }
     
     fetch(`/admin/books/${bookId}/review`, {
         method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             Swal.fire('Success!', data.message, 'success').then(() => {
                 location.reload();
@@ -386,7 +430,8 @@ function submitReview() {
         }
     })
     .catch(error => {
-        Swal.fire('Error!', 'Something went wrong.', 'error');
+        console.error('Fetch error:', error);
+        Swal.fire('Error!', 'Something went wrong: ' + error.message, 'error');
     });
     
     // Hide modal

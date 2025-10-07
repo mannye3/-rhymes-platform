@@ -57,7 +57,8 @@ class BookPolicy
      */
     public function restore(User $user, Book $book): bool
     {
-        return $user->hasRole('admin');
+        // Authors can restore their own books, admins can restore any book
+        return $user->hasRole('admin') || $user->id === $book->user_id;
     }
 
     /**
@@ -65,6 +66,7 @@ class BookPolicy
      */
     public function forceDelete(User $user, Book $book): bool
     {
+        // Only admins can permanently delete books
         return $user->hasRole('admin');
     }
 }

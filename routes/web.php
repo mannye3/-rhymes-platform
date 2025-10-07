@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [AuthorController::class, 'dashboard'])->name('dashboard');
             
             Route::resource('books', BookController::class);
+            Route::post('books/{id}/restore', [BookController::class, 'restore'])->name('books.restore');
             Route::get('wallet', [WalletController::class, 'index'])->name('wallet.index');
             Route::get('wallet/export', [WalletController::class, 'export'])->name('wallet.export');
             Route::get('payouts', [PayoutController::class, 'index'])->name('payouts.index');

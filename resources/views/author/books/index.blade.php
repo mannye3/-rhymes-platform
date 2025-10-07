@@ -90,6 +90,9 @@
                                                                         <li><span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span></li>
                                                                         @break
                                                                 @endswitch
+                                                                @if($book->trashed())
+                                                                    <li><span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Deleted</span></li>
+                                                                @endif
                                                             </ul>
                                                         </td>
                                             
@@ -112,22 +115,31 @@
                                                                                         <span>View Details</span>
                                                                                     </a>
                                                                                 </li>
-                                            
-                                                                                @if($book->status === 'pending' || $book->status === 'rejected')
+
+                                                                                @if($book->trashed())
                                                                                     <li>
-                                                                                        <a href="#" data-bs-toggle="modal" data-bs-target="#editBook-{{ $book->id }}">
-                                                                                            <em class="icon ni ni-repeat"></em>
-                                                                                            <span>Edit</span>
+                                                                                        <a href="#" onclick="restoreBook({{ $book->id }}, '{{ $book->title }}'); return false;">
+                                                                                            <em class="icon ni ni-reload"></em>
+                                                                                            <span>Restore</span>
                                                                                         </a>
                                                                                     </li>
-                                            
-                                                                                    <li class="divider"></li>
-                                                                                    <li>
-                                                                                        <a href="#" onclick="deleteBook({{ $book->id }}, '{{ $book->title }}'); return false;">
-                                                                                            <em class="icon ni ni-trash"></em>
-                                                                                            <span>Delete</span>
-                                                                                        </a>
-                                                                                    </li>
+                                                                                @else
+                                                                                    @if($book->status === 'pending' || $book->status === 'rejected')
+                                                                                        <li>
+                                                                                            <a href="#" data-bs-toggle="modal" data-bs-target="#editBook-{{ $book->id }}">
+                                                                                                <em class="icon ni ni-repeat"></em>
+                                                                                                <span>Edit</span>
+                                                                                            </a>
+                                                                                        </li>
+
+                                                                                        <li class="divider"></li>
+                                                                                        <li>
+                                                                                            <a href="#" onclick="deleteBook({{ $book->id }}, '{{ $book->title }}'); return false;">
+                                                                                                <em class="icon ni ni-trash"></em>
+                                                                                                <span>Delete</span>
+                                                                                            </a>
+                                                                                        </li>
+                                                                                    @endif
                                                                                 @endif
                                                                             </ul> 
                                                                         </div>
@@ -605,39 +617,65 @@
 
     // Delete book function with SweetAlert confirmation
     function deleteBook(bookId, bookTitle) {
-        event.preventDefault(); // Prevent default action
-        
         Swal.fire({
-            title: 'Are you sure?',
-            text: `You are about to delete "${bookTitle}". This action cannot be undone!`,
+            title: 'Delete Book?',
+            text: `Are you sure you want to delete "${bookTitle}"? This action can be undone by restoring the book.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Show loading state
-                Swal.fire({
-                    title: 'Deleting...',
-                    text: 'Please wait while we delete the book.',
-                    icon: 'info',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    willOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                // Set the form action and submit
-                const form = document.getElementById('deleteForm');
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
                 form.action = `/author/books/${bookId}`;
+                
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '_token';
+                tokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                form.appendChild(methodInput);
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
                 form.submit();
             }
         });
-        
-        return false; // Ensure no default action
+    }
+
+    function restoreBook(bookId, bookTitle) {
+        Swal.fire({
+            title: 'Restore Book?',
+            text: `Are you sure you want to restore "${bookTitle}"?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, restore it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/author/books/${bookId}/restore`;
+                
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '_token';
+                tokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     }
 </script>
 

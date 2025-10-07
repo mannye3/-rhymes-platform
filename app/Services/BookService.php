@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Repositories\Contracts\BookRepositoryInterface;
 use App\Models\Book;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -10,16 +9,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BookService
 {
-    public function __construct(
-        private BookRepositoryInterface $bookRepository
-    ) {}
-
     /**
-     * Get paginated books for user
+     * Get paginated books for user (excluding soft deleted)
      */
     public function getUserBooks(User $user, int $perPage = 10): LengthAwarePaginator
     {
-        return $this->bookRepository->getPaginatedByUser($user->id, $perPage);
+        return Book::where('user_id', $user->id)
+            ->whereNull('deleted_at')
+            ->latest()
+            ->paginate($perPage);
     }
 
     /**
@@ -30,7 +28,7 @@ class BookService
         $data['user_id'] = $user->id;
         $data['status'] = 'pending'; // Default status for new books
 
-        return $this->bookRepository->create($data);
+        return Book::create($data);
     }
 
     /**
@@ -38,23 +36,63 @@ class BookService
      */
     public function updateBook(Book $book, array $data): bool
     {
-        return $this->bookRepository->update($book, $data);
+        return $book->update($data);
     }
 
     /**
-     * Delete a book
+     * Delete a book (soft delete)
      */
     public function deleteBook(Book $book): bool
     {
-        return $this->bookRepository->delete($book);
+        return $book->delete();
     }
 
     /**
-     * Get book by ID
+     * Restore a soft deleted book
+     */
+    public function restoreBook(Book $book): bool
+    {
+        return $book->restore();
+    }
+
+    /**
+     * Permanently delete a book
+     */
+    public function forceDeleteBook(Book $book): bool
+    {
+        return $book->forceDelete();
+    }
+
+    /**
+     * Get book by ID (excluding soft deleted)
      */
     public function getBookById(int $id): ?Book
     {
-        return $this->bookRepository->findById($id);
+        return Book::find($id);
+    }
+
+    /**
+     * Get book by ID including soft deleted
+     */
+    public function getBookByIdWithTrashed(int $id): ?Book
+    {
+        return Book::withTrashed()->find($id);
+    }
+
+    /**
+     * Get all books including soft deleted
+     */
+    public function getAllBooksWithTrashed(): Collection
+    {
+        return Book::withTrashed()->get();
+    }
+
+    /**
+     * Get only soft deleted books
+     */
+    public function getOnlyTrashedBooks(): Collection
+    {
+        return Book::onlyTrashed()->get();
     }
 
     /**
@@ -62,7 +100,7 @@ class BookService
      */
     public function getBooksByStatus(string $status): Collection
     {
-        return $this->bookRepository->getByStatus($status);
+        return Book::where('status', $status)->get();
     }
 
     /**
@@ -70,7 +108,9 @@ class BookService
      */
     public function getUserBooksByStatus(User $user, string $status): Collection
     {
-        return $this->bookRepository->getByUserAndStatus($user->id, $status);
+        return Book::where('user_id', $user->id)
+            ->where('status', $status)
+            ->get();
     }
 
     /**
@@ -78,7 +118,19 @@ class BookService
      */
     public function getBookSalesAnalytics(int $bookId): array
     {
-        return $this->bookRepository->getSalesAnalytics($bookId);
+        $book = $this->getBookById($bookId);
+        
+        if (!$book) {
+            return [
+                'total_sales' => 0,
+                'sales_count' => 0,
+            ];
+        }
+
+        return [
+            'total_sales' => $book->getTotalSales(),
+            'sales_count' => $book->getSalesCount(),
+        ];
     }
 
     /**
@@ -86,7 +138,11 @@ class BookService
      */
     public function getBooksWithSalesForUser(User $user): Collection
     {
-        return $this->bookRepository->getBooksWithSalesForUser($user->id);
+        return Book::where('user_id', $user->id)
+            ->with(['walletTransactions' => function ($query) {
+                $query->where('type', 'sale');
+            }])
+            ->get();
     }
 
     /**
@@ -136,7 +192,7 @@ class BookService
             $data['admin_notes'] = $adminNotes;
         }
 
-        return $this->bookRepository->update($book, $data);
+        return $this->updateBook($book, $data);
     }
 
     /**
@@ -144,7 +200,7 @@ class BookService
      */
     public function getAuthorBooksCount(int $userId): int
     {
-        return $this->bookRepository->getCountByUser($userId);
+        return Book::where('user_id', $userId)->count();
     }
 
     /**
@@ -152,7 +208,9 @@ class BookService
      */
     public function getAuthorBooksByStatus(int $userId, string $status): Collection
     {
-        return $this->bookRepository->getByUserAndStatus($userId, $status);
+        return Book::where('user_id', $userId)
+            ->where('status', $status)
+            ->get();
     }
 
     /**
@@ -160,6 +218,9 @@ class BookService
      */
     public function getAuthorRecentBooks(int $userId, int $limit = 5): Collection
     {
-        return $this->bookRepository->getRecentByUser($userId, $limit);
+        return Book::where('user_id', $userId)
+            ->latest()
+            ->limit($limit)
+            ->get();
     }
 }

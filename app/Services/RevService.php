@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Repositories\Contracts\RevSyncLogRepositoryInterface;
+use App\Models\RevSyncLog;
 
 class RevService
 {
@@ -12,9 +12,8 @@ class RevService
     private $apiKey;
     private $enabled;
 
-    public function __construct(
-        private RevSyncLogRepositoryInterface $revSyncLogRepository
-    ) {
+    public function __construct()
+    {
         $this->baseUrl = config('services.rev.base_url');
         $this->apiKey = config('services.rev.api_key');
         $this->enabled = config('services.rev.enabled', false);
@@ -156,7 +155,7 @@ class RevService
      */
     private function logSync($area, $status, $message, $payload = null)
     {
-        $this->revSyncLogRepository->create([
+        RevSyncLog::create([
             'area' => $area,
             'status' => $status,
             'message' => $message,

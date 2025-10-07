@@ -2,8 +2,6 @@
 
 namespace App\Services\Admin;
 
-use App\Repositories\Contracts\BookRepositoryInterface;
-use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Models\Book;
 use App\Models\User;
 use App\Notifications\BookStatusChanged;
@@ -11,18 +9,11 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class BookReviewService
 {
-    public function __construct(
-        private BookRepositoryInterface $bookRepository,
-        private UserRepositoryInterface $userRepository
-    ) {}
-
     /**
      * Get paginated books for review with filters
      */
     public function getBooksForReview(array $filters = []): LengthAwarePaginator
     {
-        // For now, we'll use a direct query since we need admin-specific filtering
-        // This could be moved to a repository method if needed
         $query = Book::with('user');
         
         if (isset($filters['status']) && $filters['status'] !== 'all') {
@@ -42,7 +33,7 @@ class BookReviewService
         $oldStatus = $book->status;
         
         // Update book status
-        $updated = $this->bookRepository->update($book, $data);
+        $updated = $book->update($data);
         
         if ($updated) {
             // Handle author promotion if first book is accepted
@@ -63,7 +54,7 @@ class BookReviewService
     private function promoteUserToAuthor(User $user): void
     {
         $user->assignRole('author');
-        $this->userRepository->updateProfile($user, [
+        $user->update([
             'promoted_to_author_at' => now()
         ]);
     }

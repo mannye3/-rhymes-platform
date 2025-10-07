@@ -2,17 +2,15 @@
 
 namespace App\Services;
 
-use App\Repositories\Contracts\PayoutRepositoryInterface;
-use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Models\User;
 use App\Models\Payout;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 class PayoutService
 {
     public function __construct(
-        private PayoutRepositoryInterface $payoutRepository,
-        private UserRepositoryInterface $userRepository,
         private WalletService $walletService
     ) {}
 
@@ -21,10 +19,10 @@ class PayoutService
      */
     public function getPayoutOverview(User $user, array $filters = []): array
     {
-        $payouts = $this->payoutRepository->getPaginatedByUser($user->id, $filters);
-        $walletBalance = $this->userRepository->getWalletBalance($user);
+        $payouts = $this->getPaginatedPayoutsByUser($user->id, $filters);
+        $walletBalance = $user->getWalletBalance();
         $availableBalance = $this->walletService->getAvailableBalance($user);
-        $payoutStats = $this->payoutRepository->getPayoutStats($user->id);
+        $payoutStats = $this->getPayoutStats($user->id);
 
         return [
             'payouts' => $payouts,
@@ -43,7 +41,7 @@ class PayoutService
         $availableBalance = $this->walletService->getAvailableBalance($user);
         
         if ($data['amount_requested'] > $availableBalance) {
-            $pendingPayouts = $this->payoutRepository->getPendingPayoutsSum($user->id);
+            $pendingPayouts = $this->getPendingPayoutsSum($user->id);
             throw ValidationException::withMessages([
                 'amount_requested' => 'Insufficient balance. You have $' . number_format($pendingPayouts, 2) . ' in pending payouts.'
             ]);
@@ -59,7 +57,7 @@ class PayoutService
         $data['user_id'] = $user->id;
         $data['status'] = 'pending';
 
-        return $this->payoutRepository->create($data);
+        return Payout::create($data);
     }
 
     /**
@@ -88,7 +86,12 @@ class PayoutService
             throw new \InvalidArgumentException('Invalid payout status');
         }
 
-        return $this->payoutRepository->updateStatus($payout, $status, $adminNotes);
+        $data = ['status' => $status];
+        if ($adminNotes) {
+            $data['admin_notes'] = $adminNotes;
+        }
+
+        return $payout->update($data);
     }
 
     /**
@@ -96,7 +99,7 @@ class PayoutService
      */
     public function getAllPendingPayouts()
     {
-        return $this->payoutRepository->getAllPending();
+        return Payout::where('status', 'pending')->get();
     }
 
     /**
@@ -107,7 +110,7 @@ class PayoutService
         // Validate payment method specific fields
         $this->validatePaymentDetails($paymentDetails);
 
-        return $this->userRepository->updatePaymentDetails($user, $paymentDetails);
+        return $user->update(['payment_details' => $paymentDetails]);
     }
 
     /**
@@ -147,7 +150,9 @@ class PayoutService
      */
     public function getTotalPayouts(int $userId): float
     {
-        return $this->payoutRepository->getTotalPayoutsForUser($userId);
+        return Payout::where('user_id', $userId)
+            ->where('status', 'approved')
+            ->sum('amount_requested');
     }
 
     /**
@@ -155,7 +160,7 @@ class PayoutService
      */
     public function getPendingPayouts(int $userId): float
     {
-        return $this->payoutRepository->getPendingPayoutsSum($userId);
+        return $this->getPendingPayoutsSum($userId);
     }
 
     /**
@@ -163,14 +168,73 @@ class PayoutService
      */
     public function getCompletedPayouts(int $userId): float
     {
-        return $this->payoutRepository->getCompletedPayoutsForUser($userId);
+        return Payout::where('user_id', $userId)
+            ->where('status', 'approved')
+            ->sum('amount_requested');
     }
 
     /**
      * Get recent payouts for user
      */
-    public function getRecentPayouts(int $userId, int $limit = 3): \Illuminate\Database\Eloquent\Collection
+    public function getRecentPayouts(int $userId, int $limit = 3): Collection
     {
-        return $this->payoutRepository->getRecentByUser($userId, $limit);
+        return Payout::where('user_id', $userId)
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get paginated payouts by user
+     */
+    public function getPaginatedPayoutsByUser(int $userId, array $filters = []): LengthAwarePaginator
+    {
+        $query = Payout::where('user_id', $userId)
+            ->with(['user'])
+            ->latest();
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        return $query->paginate($filters['per_page'] ?? 10);
+    }
+
+    /**
+     * Get payout stats for user
+     */
+    public function getPayoutStats(int $userId): array
+    {
+        $totalPayouts = Payout::where('user_id', $userId)->count();
+        $pendingPayouts = Payout::where('user_id', $userId)->where('status', 'pending')->count();
+        $approvedPayouts = Payout::where('user_id', $userId)->where('status', 'approved')->count();
+        $deniedPayouts = Payout::where('user_id', $userId)->where('status', 'denied')->count();
+        $pendingAmount = Payout::where('user_id', $userId)->where('status', 'pending')->sum('amount_requested');
+
+        return [
+            'total' => $totalPayouts,
+            'pending' => $pendingPayouts,
+            'approved' => $approvedPayouts,
+            'denied' => $deniedPayouts,
+            'pending_amount' => $pendingAmount,
+        ];
+    }
+
+    /**
+     * Get pending payouts sum for user
+     */
+    public function getPendingPayoutsSum(int $userId): float
+    {
+        return Payout::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->sum('amount_requested');
     }
 }
