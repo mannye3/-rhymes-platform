@@ -56,7 +56,7 @@ return [
 
      'url'             => env('APP_URL', 'https://rhymes-platform-production.up.railway.app/'),
 
-    'asset_url'       => env('ASSET_URL', 'https://rhymes-platform-production.up.railway.app/public'),
+    'asset_url'       => env('ASSET_URL', 'https://rhymes-platform-production.up.railway.app/'),
 
     /*
     |--------------------------------------------------------------------------
