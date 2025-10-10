@@ -4,6 +4,33 @@
 @section('page-description', 'Manage your profile here')
 @section('content')
 
+@if(session('payment-success'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '{{ session('payment-success') }}',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    });
+</script>
+@endif
+
+@if(session('payment-error'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: '{{ session('payment-error') }}',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    });
+</script>
+@endif
 
 <div class="nk-content nk-content-fluid">
     <div class="container-xl wide-xl">
@@ -194,6 +221,13 @@
                                                 </div>
                                                 <div class="data-col data-col-end"><span class="data-more"><em class="icon ni ni-forward-ios"></em></span></div>
                                             </div><!-- data-item -->
+                                            <div class="data-item" data-bs-toggle="modal" data-bs-target="#payment-details">
+                                                <div class="data-col">
+                                                    <span class="data-label">Account Number</span>
+                                                    <span class="data-value">{{ $user->payment_details['account_number'] ?? 'Not set' }}</span>
+                                                </div>
+                                                <div class="data-col data-col-end"><span class="data-more"><em class="icon ni ni-forward-ios"></em></span></div>
+                                            </div><!-- data-item -->
                                         @elseif($user->payment_details['payment_method'] === 'paypal')
                                             <div class="data-item" data-bs-toggle="modal" data-bs-target="#payment-details">
                                                 <div class="data-col">
@@ -212,6 +246,11 @@
                                             </div><!-- data-item -->
                                         @endif
                                     @endif
+                                    <div class="data-item" data-bs-toggle="modal" data-bs-target="#payment-details">
+                                        <div class="data-col">
+                                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#payment-details">Update Payment Details</button>
+                                        </div>
+                                    </div><!-- data-item -->
                                 </div><!-- data-list -->
                                 
                               
@@ -421,58 +460,6 @@ $(document).ready(function() {
         });
     });
 
-    // Payment details form
-    $('#payment-details-form').on('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        
-        $.ajax({
-            url: '{{ route("author.profile.payment-details.update") }}',
-            method: 'PUT',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: response.message,
-                        timer: 3000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        location.reload();
-                    });
-                }
-            },
-            error: function(xhr) {
-                const response = xhr.responseJSON;
-                if (response?.errors) {
-                    let errorMessage = 'Please fix the following errors:\n';
-                    Object.keys(response.errors).forEach(key => {
-                        errorMessage += `• ${response.errors[key][0]}\n`;
-                    });
-                    
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        text: errorMessage
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response?.message || 'An error occurred while updating payment details.'
-                    });
-                }
-            }
-        });
-    });
-
     // Password visibility toggle
     $('.passcode-switch').on('click', function(e) {
         e.preventDefault();
@@ -490,6 +477,9 @@ $(document).ready(function() {
             $(this).find('.icon-hide').hide();
         }
     });
+    
+    // Handle payment details form submission for non-JavaScript users
+    // This is just for consistency - the form will submit normally without JavaScript
 });
 </script>
 @endpush

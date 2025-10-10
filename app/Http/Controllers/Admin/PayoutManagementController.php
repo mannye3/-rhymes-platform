@@ -58,17 +58,17 @@ class PayoutManagementController extends Controller
 
     public function show(Payout $payout)
     {
-        $payout->load(['user', 'user.books', 'user.walletTransactions']);
+        $payout->load(['user']);
         
-        // Calculate user statistics
-        $userStats = [
-            'total_earnings' => $payout->user->walletTransactions()->where('type', 'sale')->sum('amount'),
-            'total_payouts' => $payout->user->payouts()->where('status', 'approved')->sum('amount_requested'),
-            'pending_payouts' => $payout->user->payouts()->where('status', 'pending')->sum('amount_requested'),
-            'available_balance' => $payout->user->walletTransactions()->sum('amount') - $payout->user->payouts()->where('status', 'pending')->sum('amount_requested'),
-        ];
+        // Return JSON response for AJAX requests
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'payout' => $payout
+            ]);
+        }
         
-        return view('admin.payouts.show', compact('payout', 'userStats'));
+        return view('admin.payouts.show', compact('payout'));
     }
 
     public function approve(Request $request, Payout $payout)
@@ -86,11 +86,35 @@ class PayoutManagementController extends Controller
             );
 
             if ($approved) {
+                // Return JSON response for AJAX requests
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Payout approved successfully! Author has been notified.'
+                    ]);
+                }
+                
                 return back()->with('success', 'Payout approved successfully! Author has been notified.');
+            }
+            
+            // Return JSON response for AJAX requests
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to approve payout.'
+                ]);
             }
             
             return back()->with('error', 'Failed to approve payout.');
         } catch (\InvalidArgumentException $e) {
+            // Return JSON response for AJAX requests
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            
             return back()->with('error', $e->getMessage());
         }
     }
@@ -110,11 +134,35 @@ class PayoutManagementController extends Controller
             );
 
             if ($denied) {
+                // Return JSON response for AJAX requests
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Payout denied. Author has been notified with the reason.'
+                    ]);
+                }
+                
                 return back()->with('success', 'Payout denied. Author has been notified with the reason.');
+            }
+            
+            // Return JSON response for AJAX requests
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to deny payout.'
+                ]);
             }
             
             return back()->with('error', 'Failed to deny payout.');
         } catch (\InvalidArgumentException $e) {
+            // Return JSON response for AJAX requests
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            
             return back()->with('error', $e->getMessage());
         }
     }

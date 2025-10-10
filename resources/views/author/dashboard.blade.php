@@ -190,7 +190,7 @@
                                     <div class="text-center py-4">
                                         <em class="icon ni ni-book-read" style="font-size: 3rem; opacity: 0.3;"></em>
                                         <p class="text-soft mt-2">No sales data available yet. Start by publishing your first book!</p>
-                                        <a href="" class="btn btn-primary btn-sm mt-2">Add Your First Book</a>
+                                       
                                     </div>
                                 @endif
                             </div>

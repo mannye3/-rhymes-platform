@@ -7,7 +7,9 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Book;
 use App\Models\WalletTransaction;
+use App\Models\Payout;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DemoDataSeeder extends Seeder
 {
@@ -52,6 +54,9 @@ class DemoDataSeeder extends Seeder
         }
 
         // Create additional authors
+        $authors = [];
+        $authors[] = $author; // Add the first author
+        
         $author2 = User::firstOrCreate([
             'email' => 'sarah@rhymes.com',
         ], [
@@ -67,6 +72,7 @@ class DemoDataSeeder extends Seeder
             'promoted_to_author_at' => now(),
         ]);
         $author2->assignRole('author');
+        $authors[] = $author2;
 
         $author3 = User::firstOrCreate([
             'email' => 'michael@rhymes.com',
@@ -83,8 +89,28 @@ class DemoDataSeeder extends Seeder
             'promoted_to_author_at' => now(),
         ]);
         $author3->assignRole('author');
+        $authors[] = $author3;
 
-        // Create regular user
+        // Create more authors using factory
+        $additionalAuthors = User::factory()->count(7)->create()->each(function ($user) {
+            $user->assignRole('author');
+            $user->update([
+                'payment_details' => [
+                    'bank_name' => 'Demo Bank',
+                    'account_number' => Str::random(10),
+                    'routing_number' => Str::random(9)
+                ],
+                'promoted_to_author_at' => now(),
+            ]);
+        });
+        
+        foreach ($additionalAuthors as $addAuthor) {
+            $authors[] = $addAuthor;
+        }
+
+        // Create regular users
+        $users = [];
+        
         $user = User::firstOrCreate([
             'email' => 'user@rhymes.com',
         ], [
@@ -93,6 +119,7 @@ class DemoDataSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $user->assignRole('user');
+        $users[] = $user;
 
         // Create additional regular users
         $user2 = User::firstOrCreate([
@@ -103,6 +130,7 @@ class DemoDataSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $user2->assignRole('user');
+        $users[] = $user2;
 
         $user3 = User::firstOrCreate([
             'email' => 'bob@rhymes.com',
@@ -112,192 +140,115 @@ class DemoDataSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $user3->assignRole('user');
+        $users[] = $user3;
 
-        // Create sample books for first author (avoid duplicates)
-        $book1 = Book::firstOrCreate([
-            'isbn' => '9781234567890',
-        ], [
-            'user_id' => $author->id,
-            'title' => 'The Great Adventure',
-            'genre' => 'Fiction',
-            'price' => 19.99,
-            'book_type' => 'both',
-            'description' => 'An epic tale of adventure and discovery in a magical world.',
-            'status' => 'accepted',
-            'admin_notes' => 'Great book! Approved for stocking.',
-            'rev_book_id' => 'REV-001',
-        ]);
+        // Create more users using factory
+        $additionalUsers = User::factory()->count(10)->create()->each(function ($user) {
+            $user->assignRole('user');
+        });
+        
+        foreach ($additionalUsers as $addUser) {
+            $users[] = $addUser;
+        }
 
-        $book2 = Book::firstOrCreate([
-            'isbn' => '9781234567891',
-        ], [
-            'user_id' => $author->id,
-            'title' => 'Business Success Guide',
-            'genre' => 'Business',
-            'price' => 24.99,
-            'book_type' => 'digital',
-            'description' => 'A comprehensive guide to building a successful business.',
-            'status' => 'stocked',
-            'admin_notes' => 'Excellent content. Now available in our inventory.',
-            'rev_book_id' => 'REV-002',
-        ]);
+        // Create sample books for authors
+        $books = [];
+        
+        // Genres for variety
+        $genres = ['Fiction', 'Business', 'Mystery', 'Science Fiction', 'Romance', 'Cooking', 'Biography', 'History', 'Fantasy', 'Thriller'];
+        $statuses = ['pending', 'accepted', 'stocked'];
+        $types = ['digital', 'physical', 'both'];
+        
+        // Create books for each author
+        foreach ($authors as $index => $auth) {
+            // Create 3-5 books per author
+            $bookCount = rand(3, 5);
+            
+            for ($i = 0; $i < $bookCount; $i++) {
+                $genre = $genres[array_rand($genres)];
+                $type = $types[array_rand($types)];
+                $status = $statuses[array_rand($statuses)];
+                
+                $book = Book::firstOrCreate([
+                    'isbn' => '978' . str_pad(($index * 1000 + $i + 1), 10, '0', STR_PAD_LEFT),
+                ], [
+                    'user_id' => $auth->id,
+                    'title' => $genre . ' Book #' . ($i + 1) . ' by ' . $auth->name,
+                    'genre' => $genre,
+                    'price' => rand(9, 29) + (rand(0, 99) / 100),
+                    'book_type' => $type,
+                    'description' => 'This is a sample ' . $genre . ' book created for demonstration purposes. It showcases the kind of content you might find in a typical ' . strtolower($genre) . ' publication.',
+                    'status' => $status,
+                    'admin_notes' => $status == 'pending' ? 'Under review.' : ($status == 'accepted' ? 'Approved for stocking.' : 'Available for sale.'),
+                    'rev_book_id' => 'REV-' . str_pad(($index * 100 + $i + 1), 4, '0', STR_PAD_LEFT),
+                ]);
+                
+                $books[] = $book;
+            }
+        }
 
-        // Create books for second author
-        $book3 = Book::firstOrCreate([
-            'isbn' => '9781234567892',
-        ], [
-            'user_id' => $author2->id,
-            'title' => 'Mystery of the Lost City',
-            'genre' => 'Mystery',
-            'price' => 16.99,
-            'book_type' => 'physical',
-            'description' => 'A thrilling mystery set in an ancient lost city.',
-            'status' => 'accepted',
-            'admin_notes' => 'Intriguing plot. Approved.',
-            'rev_book_id' => 'REV-003',
-        ]);
+        // Create wallet transactions (sales) for books
+        foreach ($books as $book) {
+            // Skip pending books
+            if ($book->status === 'pending') {
+                continue;
+            }
+            
+            // Create 2-8 sales per book
+            $salesCount = rand(2, 8);
+            
+            for ($i = 0; $i < $salesCount; $i++) {
+                $buyer = $users[array_rand($users)];
+                
+                WalletTransaction::create([
+                    'user_id' => $book->user_id,
+                    'book_id' => $book->id,
+                    'type' => 'sale',
+                    'amount' => $book->price * (rand(80, 120) / 100), // Slight variation in price
+                    'meta' => [
+                        'sale_date' => now()->subDays(rand(1, 30)),
+                        'customer_location' => fake()->city() . ', ' . fake()->stateAbbr(),
+                        'sale_type' => $book->book_type == 'both' ? (rand(0, 1) ? 'physical' : 'digital') : $book->book_type
+                    ],
+                ]);
+            }
+        }
 
-        $book4 = Book::firstOrCreate([
-            'isbn' => '9781234567893',
-        ], [
-            'user_id' => $author2->id,
-            'title' => 'Science Fiction Odyssey',
-            'genre' => 'Science Fiction',
-            'price' => 21.99,
-            'book_type' => 'digital',
-            'description' => 'Journey through space and time in this epic sci-fi adventure.',
-            'status' => 'stocked',
-            'admin_notes' => 'Great sci-fi elements. Available for sale.',
-            'rev_book_id' => 'REV-004',
-        ]);
-
-        // Create books for third author
-        $book5 = Book::firstOrCreate([
-            'isbn' => '9781234567894',
-        ], [
-            'user_id' => $author3->id,
-            'title' => 'Romance in Paris',
-            'genre' => 'Romance',
-            'price' => 14.99,
-            'book_type' => 'both',
-            'description' => 'A heartwarming love story set in the city of lights.',
-            'status' => 'accepted',
-            'admin_notes' => 'Beautifully written romance.',
-            'rev_book_id' => 'REV-005',
-        ]);
-
-        $book6 = Book::firstOrCreate([
-            'isbn' => '9781234567895',
-        ], [
-            'user_id' => $author3->id,
-            'title' => 'Cooking for Beginners',
-            'genre' => 'Cooking',
-            'price' => 18.99,
-            'book_type' => 'physical',
-            'description' => 'Easy recipes for those just starting their culinary journey.',
-            'status' => 'pending',
-            'admin_notes' => 'Under review.',
-        ]);
-
-        // Create sample wallet transactions (sales) for first author
-        // We'll create new transactions each time to avoid duplicates
-        WalletTransaction::create([
-            'user_id' => $author->id,
-            'book_id' => $book1->id,
-            'type' => 'sale',
-            'amount' => 15.99,
-            'meta' => [
-                'sale_date' => now()->subDays(5),
-                'customer_location' => 'New York, NY',
-                'sale_type' => 'physical'
-            ],
-        ]);
-
-        WalletTransaction::create([
-            'user_id' => $author->id,
-            'book_id' => $book1->id,
-            'type' => 'sale',
-            'amount' => 15.99,
-            'meta' => [
-                'sale_date' => now()->subDays(3),
-                'customer_location' => 'Los Angeles, CA',
-                'sale_type' => 'digital'
-            ],
-        ]);
-
-        WalletTransaction::create([
-            'user_id' => $author->id,
-            'book_id' => $book2->id,
-            'type' => 'sale',
-            'amount' => 19.99,
-            'meta' => [
-                'sale_date' => now()->subDays(1),
-                'customer_location' => 'Chicago, IL',
-                'sale_type' => 'digital'
-            ],
-        ]);
-
-        // Create sample wallet transactions (sales) for second author
-        WalletTransaction::create([
-            'user_id' => $author2->id,
-            'book_id' => $book3->id,
-            'type' => 'sale',
-            'amount' => 13.59,
-            'meta' => [
-                'sale_date' => now()->subDays(7),
-                'customer_location' => 'Miami, FL',
-                'sale_type' => 'physical'
-            ],
-        ]);
-
-        WalletTransaction::create([
-            'user_id' => $author2->id,
-            'book_id' => $book3->id,
-            'type' => 'sale',
-            'amount' => 13.59,
-            'meta' => [
-                'sale_date' => now()->subDays(4),
-                'customer_location' => 'Seattle, WA',
-                'sale_type' => 'digital'
-            ],
-        ]);
-
-        WalletTransaction::create([
-            'user_id' => $author2->id,
-            'book_id' => $book4->id,
-            'type' => 'sale',
-            'amount' => 17.59,
-            'meta' => [
-                'sale_date' => now()->subDays(2),
-                'customer_location' => 'Boston, MA',
-                'sale_type' => 'digital'
-            ],
-        ]);
-
-        // Create sample wallet transactions (sales) for third author
-        WalletTransaction::create([
-            'user_id' => $author3->id,
-            'book_id' => $book5->id,
-            'type' => 'sale',
-            'amount' => 11.99,
-            'meta' => [
-                'sale_date' => now()->subDays(6),
-                'customer_location' => 'Denver, CO',
-                'sale_type' => 'physical'
-            ],
-        ]);
-
-        WalletTransaction::create([
-            'user_id' => $author3->id,
-            'book_id' => $book5->id,
-            'type' => 'sale',
-            'amount' => 11.99,
-            'meta' => [
-                'sale_date' => now()->subDays(3),
-                'customer_location' => 'Austin, TX',
-                'sale_type' => 'digital'
-            ],
-        ]);
+        // Create some payouts for authors with significant earnings
+        foreach ($authors as $author) {
+            $balance = $author->getWalletBalance();
+            
+            // Only create payouts for authors with balance > $20
+            if ($balance > 20) {
+                // Create 1-2 payouts per eligible author
+                $payoutCount = rand(1, 2);
+                
+                for ($i = 0; $i < $payoutCount; $i++) {
+                    $amount = min($balance * (rand(30, 80) / 100), $balance); // Request 30-80% of balance
+                    
+                    Payout::create([
+                        'user_id' => $author->id,
+                        'amount_requested' => $amount,
+                        'status' => $i == 0 ? 'completed' : 'pending', // First payout completed, others pending
+                        'admin_notes' => $i == 0 ? 'Processed successfully.' : 'Awaiting approval.',
+                        'processed_at' => $i == 0 ? now()->subDays(rand(1, 10)) : null,
+                    ]);
+                    
+                    // If completed, create a corresponding wallet transaction
+                    if ($i == 0) {
+                        WalletTransaction::create([
+                            'user_id' => $author->id,
+                            'type' => 'payout',
+                            'amount' => -$amount, // Negative amount for payouts
+                            'meta' => [
+                                'payout_id' => Payout::latest()->first()->id,
+                                'processed_date' => now()->subDays(rand(1, 10))
+                            ],
+                        ]);
+                    }
+                }
+            }
+        }
 
         $this->command->info('Demo data created successfully!');
         $this->command->info('Admin: admin@rhymes.com / password');
@@ -309,5 +260,12 @@ class DemoDataSeeder extends Seeder
         $this->command->info('  - user@rhymes.com / password');
         $this->command->info('  - jane@rhymes.com / password');
         $this->command->info('  - bob@rhymes.com / password');
+        $this->command->info('');
+        $this->command->info('Additionally created:');
+        $this->command->info('  - 7 more authors');
+        $this->command->info('  - 10 more users');
+        $this->command->info('  - Multiple books per author');
+        $this->command->info('  - Sales transactions');
+        $this->command->info('  - Payout records');
     }
 }

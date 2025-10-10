@@ -41,34 +41,13 @@ class BookStatusChanged extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $subject = 'Book Status Update: ' . $this->book->title;
-        $greeting = 'Hello ' . $notifiable->name . ',';
-        
-        $message = (new MailMessage)
-            ->subject($subject)
-            ->greeting($greeting)
-            ->line('Your book "' . $this->book->title . '" status has been updated.');
-
-        switch ($this->newStatus) {
-            case 'accepted':
-                $message->line('🎉 Congratulations! Your book has been accepted for stocking at Rovingheights.')
-                        ->line('You have been promoted to Author status and can now access your author dashboard.')
-                        ->action('View Author Dashboard', route('dashboard'));
-                break;
-            case 'rejected':
-                $message->line('Unfortunately, your book submission was not accepted at this time.')
-                        ->line('Admin notes: ' . ($this->book->admin_notes ?: 'No additional notes provided.'))
-                        ->line('You can edit and resubmit your book with improvements.')
-                        ->action('Edit Book', route('author.books.edit', $this->book));
-                break;
-            case 'stocked':
-                $message->line('🚀 Great news! Your book is now available in our inventory.')
-                        ->line('Sales tracking is now active and you can monitor your earnings.')
-                        ->action('View Wallet', route('author.wallet.index'));
-                break;
-        }
-
-        return $message->line('Thank you for being part of the Rhymes platform!');
+        return (new MailMessage)
+            ->subject('Book Status Update: ' . $this->book->title)
+            ->view('emails.book-status-changed', [
+                'user' => $notifiable,
+                'book' => $this->book,
+                'newStatus' => $this->newStatus,
+            ]);
     }
 
     /**

@@ -129,6 +129,13 @@
                                     </a>
                                 </li><!-- .nk-menu-item -->
                                 
+                                <li class="nk-menu-item">
+                                    <a href="{{ route('admin.users.activity') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-activity-alt"></em></span>
+                                        <span class="nk-menu-text">User Activities</span>
+                                    </a>
+                                </li><!-- .nk-menu-item -->
+                                
                                 <li class="nk-menu-heading">
                                     <h6 class="overline-title text-primary-alt">System</h6>
                                 </li><!-- .nk-menu-heading -->

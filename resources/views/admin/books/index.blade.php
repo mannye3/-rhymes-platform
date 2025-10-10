@@ -195,7 +195,20 @@
                         </div>
 
                         <div class="card-inner">
-                            {{ $books->appends(request()->query())->links() }}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    Showing {{ $books->firstItem() }} to {{ $books->lastItem() }} of {{ $books->total() }} entries
+                                </div>
+                                @if ($books->hasPages())
+                                    <div>
+                                        {{ $books->appends([
+                                            'status' => request('status', ''),
+                                            'genre' => request('genre', ''),
+                                            'search' => request('search', '')
+                                        ])->links('vendor.pagination.bootstrap-4') }}
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -205,6 +218,7 @@
 </div>
 
 @foreach($books as $book)
+
 <!-- Review Modal -->
 <div class="modal fade" tabindex="-1" id="reviewModal-{{$book->id}}" aria-labelledby="reviewModalLabel-{{$book->id}}" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -250,7 +264,6 @@
                 
                 <form id="reviewForm-{{$book->id}}" class="review-form">
                     @csrf
-                    <input type="hidden" name="book_id" value="{{ $book->id }}">
                     
                     <div class="form-group mb-3">
                         <label class="form-label">Admin Decision</label>
@@ -439,6 +452,7 @@
                 @if($book->status === 'pending')
                 <button type="button" class="btn btn-primary" onclick="reviewBook({{ $book->id }}, 'accepted')">Approve</button>
                 <button type="button" class="btn btn-danger" onclick="reviewBook({{ $book->id }}, 'rejected')">Reject</button>
+                <button type="button" class="btn btn-info" onclick="reviewBook({{ $book->id }}, 'stocked')">Stock</button>
                 @else
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal-{{$book->id}}" data-bs-dismiss="modal">Edit Status</button>
                 @endif
@@ -497,7 +511,41 @@ document.addEventListener('shown.bs.modal', function (event) {
 
 function submitReview(bookId) {
     const form = document.getElementById(`reviewForm-${bookId}`);
+    if (!form) {
+        console.error('Form not found for book ID:', bookId);
+        Swal.fire('Error!', 'Form not found. Please try again.', 'error');
+        return;
+    }
+    
+    // Check CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        Swal.fire('Error!', 'CSRF token not found. Please refresh the page and try again.', 'error');
+        return;
+    }
+    
+    const csrfTokenValue = csrfToken.getAttribute('content');
+    console.log('CSRF Token:', csrfTokenValue);
+    
     const formData = new FormData(form);
+    
+    // Log form data for debugging
+    console.log('Submitting review for book ID:', bookId);
+    console.log('Form element:', form);
+    console.log('Form elements:');
+    for (let i = 0; i < form.elements.length; i++) {
+        const element = form.elements[i];
+        if (element.name) {
+            console.log(element.name, element.value, element.type);
+        }
+    }
+    
+    // Log FormData entries
+    console.log('FormData entries:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
     
     // Get the selected status
     const selectedStatus = form.querySelector('input[name="status"]:checked');
@@ -506,36 +554,123 @@ function submitReview(bookId) {
         return;
     }
     
+    // Convert FormData to URLSearchParams for better compatibility with PATCH requests
+    const urlParams = new URLSearchParams();
+    for (let [key, value] of formData.entries()) {
+        urlParams.append(key, value);
+    }
+    
+    // Show loading indicator
+    const submitButton = document.querySelector(`#reviewModal-${bookId} .btn-primary`);
+    if (!submitButton) {
+        console.error('Submit button not found for book ID:', bookId);
+        Swal.fire('Error!', 'Submit button not found. Please try again.', 'error');
+        return;
+    }
+    
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+    submitButton.disabled = true;
+    
     fetch(`/admin/books/${bookId}/review`, {
         method: 'PATCH',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-TOKEN': csrfTokenValue,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
         },
-        body: formData
+        body: urlParams
     })
     .then(response => {
+        console.log('Response status:', response.status);
+        // Reset button state
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+        
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('Network response was not ok: ' + response.status);
         }
         return response.json();
     })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
-            Swal.fire('Success!', data.message, 'success').then(() => {
-                location.reload();
+            Swal.fire({
+                title: 'Success!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Close the modal
+                    const modalElement = document.getElementById(`reviewModal-${bookId}`);
+                    if (modalElement) {
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) {
+                            modal.hide();
+                        }
+                    }
+                    // Refresh the page to show updated status
+                    location.reload();
+                }
             });
         } else {
-            Swal.fire('Error!', data.message || 'Failed to update book status.', 'error');
+            Swal.fire({
+                title: 'Error!',
+                text: data.message || 'Failed to update book status.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+        // Reset button state
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+        Swal.fire({
+            title: 'Error!',
+            text: 'Something went wrong. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    });
+}
+
+
+
+// Function to open the review modal with book details
+function reviewBook(bookId, status) {
+    // Close any open view details modal first
+    document.querySelectorAll('.modal.show').forEach(modal => {
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
     });
     
-    // Hide modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById(`reviewModal-${bookId}`));
-    modal.hide();
+    // Show the review modal
+    const modalElement = document.getElementById(`reviewModal-${bookId}`);
+    if (!modalElement) {
+        Swal.fire('Error!', 'Could not find the review modal for this book.', 'error');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    
+    // Set the status radio button after a short delay to ensure the modal is fully loaded
+    setTimeout(function() {
+        const form = document.getElementById(`reviewForm-${bookId}`);
+        if (!form) return;
+        
+        const statusInput = form.querySelector(`input[value="${status}"]`);
+        if (statusInput) {
+            statusInput.checked = true;
+            // Trigger change event to show/hide REV Book ID field
+            statusInput.dispatchEvent(new Event('change'));
+        }
+    }, 100);
 }
 
 function bulkAction(action) {
@@ -739,39 +874,7 @@ function forceDeleteBook(bookId) {
     });
 }
 
-// Function to open the review modal with book details
-function reviewBook(bookId, status) {
-    // Close any open view details modal first
-    document.querySelectorAll('.modal.show').forEach(modal => {
-        const modalInstance = bootstrap.Modal.getInstance(modal);
-        if (modalInstance) {
-            modalInstance.hide();
-        }
-    });
-    
-    // Show the review modal
-    const modalElement = document.getElementById(`reviewModal-${bookId}`);
-    if (!modalElement) {
-        Swal.fire('Error!', 'Could not find the review modal for this book.', 'error');
-        return;
-    }
-    
-    const modal = new bootstrap.Modal(modalElement);
-    modal.show();
-    
-    // Set the status radio button after a short delay to ensure the modal is fully loaded
-    setTimeout(function() {
-        const form = document.getElementById(`reviewForm-${bookId}`);
-        if (!form) return;
-        
-        const statusInput = form.querySelector(`input[value="${status}"]`);
-        if (statusInput) {
-            statusInput.checked = true;
-            // Trigger change event to show/hide REV Book ID field
-            statusInput.dispatchEvent(new Event('change'));
-        }
-    }, 100);
-}
+
 </script>
 @endpush
 @endsection

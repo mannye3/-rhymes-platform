@@ -118,30 +118,42 @@ class PayoutService
      */
     private function validatePaymentDetails(array $paymentDetails): void
     {
-        $method = $paymentDetails['payment_method'];
+        $method = $paymentDetails['payment_method'] ?? null;
+
+        if (!$method) {
+            throw ValidationException::withMessages([
+                'payment_method' => 'Payment method is required'
+            ]);
+        }
 
         switch ($method) {
             case 'bank_transfer':
-                if (empty($paymentDetails['account_number']) || empty($paymentDetails['routing_number'])) {
+                if (empty($paymentDetails['bank_name']) || 
+                    empty($paymentDetails['account_number']) || 
+                    empty($paymentDetails['routing_number'])) {
                     throw ValidationException::withMessages([
-                        'payment_details' => 'Bank transfer requires account number and routing number'
+                        'bank_details' => 'Bank transfer requires bank name, account number and routing number'
                     ]);
                 }
                 break;
             case 'paypal':
                 if (empty($paymentDetails['paypal_email'])) {
                     throw ValidationException::withMessages([
-                        'payment_details' => 'PayPal requires email address'
+                        'paypal_email' => 'PayPal requires email address'
                     ]);
                 }
                 break;
             case 'stripe':
                 if (empty($paymentDetails['stripe_account_id'])) {
                     throw ValidationException::withMessages([
-                        'payment_details' => 'Stripe requires account ID'
+                        'stripe_account_id' => 'Stripe requires account ID'
                     ]);
                 }
                 break;
+            default:
+                throw ValidationException::withMessages([
+                    'payment_method' => 'Invalid payment method selected'
+                ]);
         }
     }
 

@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController as UserDashboardController;
 use App\Http\Controllers\Author\BookController;
 use App\Http\Controllers\Author\WalletController;
 use App\Http\Controllers\Author\PayoutController;
@@ -17,30 +17,36 @@ use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Author\AuthorController;
 use App\Http\Controllers\Author\AuthorProfileController;
+use App\Http\Controllers\User\BookSubmissionController;
+
+// Test route for payment form submission (only in local environment)
+if (app()->environment('local')) {
+    Route::get('/test/payment-form', function () {
+        if (!\Illuminate\Support\Facades\Auth::check()) {
+            return redirect()->route('login');
+        }
+        
+        $user = \Illuminate\Support\Facades\Auth::user();
+        return view('author.profile.test-payment-form', compact('user'));
+    })->name('test.payment-form');
+}
+
 Route::get('/', function () {
     return view('auth.login');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        
-        // Redirect based on user role
-        if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard');
-        } elseif ($user->hasRole('author')) {
-            return redirect()->route('author.dashboard');
-        }
-        
-        // Default dashboard for regular users
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     
     // Notifications
     Route::get('/notifications/unread', [NotificationController::class, 'unread'])->name('notifications.unread');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/toggle-dark-mode', [NotificationController::class, 'toggleDarkMode'])->name('toggle-dark-mode');
+    
+    // User book submission routes
+    Route::get('/books/submit', [BookSubmissionController::class, 'create'])->name('user.books.create');
+    Route::post('/books/submit', [BookSubmissionController::class, 'store'])->name('user.books.store');
     
     // Author routes
     Route::middleware('role:author')->group(function () {
@@ -73,6 +79,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
             
             // User Management
+            Route::get('users/activity', [AdminController::class, 'userActivity'])->name('users.activity');
             Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
             Route::get('users/authors', [UserManagementController::class, 'authors'])->name('users.authors');
             Route::get('users/create', [UserManagementController::class, 'create'])->name('users.create');
@@ -127,6 +134,11 @@ Route::middleware('auth')->group(function () {
             Route::post('profile/export-data', [AdminProfileController::class, 'exportData'])->name('profile.export-data');
         });
     });
+    // User Profile routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
     // Notification routes
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');

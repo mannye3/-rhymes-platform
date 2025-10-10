@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AuthorProfileController extends Controller
@@ -179,38 +180,78 @@ class AuthorProfileController extends Controller
     /**
      * Update payment details.
      */
-    public function updatePaymentDetails(Request $request): JsonResponse
+    public function updatePaymentDetails(Request $request): JsonResponse|RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
+        // Define base validation rules
+        $rules = [
             'payment_method' => 'required|in:bank_transfer,paypal,stripe',
             'account_holder_name' => 'required|string|max:255',
-            'account_number' => 'nullable|string|max:255',
-            'routing_number' => 'nullable|string|max:255',
-            'bank_name' => 'nullable|string|max:255',
-            'paypal_email' => 'nullable|email|max:255',
-            'stripe_account_id' => 'nullable|string|max:255',
-        ]);
+        ];
+        
+        // Add conditional validation rules based on payment method
+        switch ($request->payment_method) {
+            case 'bank_transfer':
+                $rules['bank_name'] = 'required|string|max:255';
+                $rules['account_number'] = 'required|string|max:255';
+                $rules['routing_number'] = 'required|string|max:255';
+                break;
+            case 'paypal':
+                $rules['paypal_email'] = 'required|email|max:255';
+                break;
+            case 'stripe':
+                $rules['stripe_account_id'] = 'required|string|max:255';
+                break;
+        }
+        
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+            // Check if this is an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            } else {
+                // For non-AJAX requests, redirect back with errors
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('payment-error', 'Please correct the errors below.');
+            }
         }
 
         try {
             $user = $request->user();
             $this->payoutService->updatePaymentDetails($user, $validator->validated());
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Payment details updated successfully!'
-            ]);
+            // Check if this is an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment details updated successfully!'
+                ]);
+            } else {
+                // For non-AJAX requests, redirect back with success message
+                return redirect()->back()
+                    ->with('payment-success', 'Payment details updated successfully!');
+            }
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while updating payment details.'
-            ], 500);
+            // Log the exception for debugging
+            Log::error('Payment details update error: ' . $e->getMessage());
+            
+            // Check if this is an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating payment details.'
+                ], 500);
+            } else {
+                // For non-AJAX requests, redirect back with error message
+                return redirect()->back()
+                    ->withInput()
+                    ->with('payment-error', 'An error occurred while updating payment details.');
+            }
         }
     }
 

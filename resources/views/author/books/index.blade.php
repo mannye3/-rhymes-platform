@@ -175,7 +175,7 @@
                     </a>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="{{ route('author.books.store') }}" class="form-validate is-alter">
+                    <form method="POST" action="{{ route('author.books.store') }}">
                         @csrf
                         <div class="row g-4">
                             <!-- ISBN -->
@@ -314,7 +314,7 @@
                     </a>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="{{ route('author.books.update', $book->id) }}" class="form-validate is-alter" id="editBookForm-{{$book->id}}">
+                    <form method="POST" action="{{ route('author.books.update', $book->id) }}" id="editBookForm-{{$book->id}}">
                         @csrf
                         @method('PUT')
                         <div class="row g-4">

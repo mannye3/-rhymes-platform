@@ -7,8 +7,9 @@
                 <h5 class="title">Payment Details</h5>
                 <p class="text-soft">Configure your payment method for receiving payouts.</p>
                 
-                <form id="payment-details-form" class="form-validate is-alter">
+                <form id="payment-details-form" class="form-validate is-alter" method="POST" action="{{ route('author.profile.payment-details.update') }}">
                     @csrf
+                    @method('PUT')
                     <div class="row gy-4">
                         <div class="col-12">
                             <div class="form-group">
@@ -19,12 +20,12 @@
                                         <option value="bank_transfer" {{ old('payment_method', $user->payment_details['payment_method'] ?? '') == 'bank_transfer' ? 'selected' : '' }}>
                                             Bank Transfer
                                         </option>
-                                        <option value="paypal" {{ old('payment_method', $user->payment_details['payment_method'] ?? '') == 'paypal' ? 'selected' : '' }}>
+                                        {{-- <option value="paypal" {{ old('payment_method', $user->payment_details['payment_method'] ?? '') == 'paypal' ? 'selected' : '' }}>
                                             PayPal
                                         </option>
                                         <option value="stripe" {{ old('payment_method', $user->payment_details['payment_method'] ?? '') == 'stripe' ? 'selected' : '' }}>
                                             Stripe
-                                        </option>
+                                        </option> --}}
                                     </select>
                                 </div>
                             </div>
@@ -46,7 +47,20 @@
                         </div>
 
                         <!-- Bank Transfer Fields -->
-                        <div id="bank_transfer_fields" class="payment-method-fields" style="display: none;">
+                        <div id="bank_transfer_fields" class="payment-method-fields">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label class="form-label" for="bank_name">Bank Name</label>
+                                    <div class="form-control-wrap">
+                                        <input type="text" 
+                                               class="form-control form-control-lg" 
+                                               id="bank_name" 
+                                               name="bank_name" 
+                                               placeholder="Name of your bank" 
+                                               value="{{ old('bank_name', $user->payment_details['bank_name'] ?? '') }}">
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-label" for="account_number">Account Number</label>
@@ -73,23 +87,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label class="form-label" for="bank_name">Bank Name</label>
-                                    <div class="form-control-wrap">
-                                        <input type="text" 
-                                               class="form-control form-control-lg" 
-                                               id="bank_name" 
-                                               name="bank_name" 
-                                               placeholder="Name of your bank" 
-                                               value="{{ old('bank_name', $user->payment_details['bank_name'] ?? '') }}">
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- PayPal Fields -->
-                        <div id="paypal_fields" class="payment-method-fields" style="display: none;">
+                        <div id="paypal_fields" class="payment-method-fields">
                             <div class="col-12">
                                 <div class="form-group">
                                     <label class="form-label" for="paypal_email">PayPal Email</label>
@@ -109,7 +110,7 @@
                         </div>
 
                         <!-- Stripe Fields -->
-                        <div id="stripe_fields" class="payment-method-fields" style="display: none;">
+                        <div id="stripe_fields" class="payment-method-fields">
                             <div class="col-12">
                                 <div class="form-group">
                                     <label class="form-label" for="stripe_account_id">Stripe Account ID</label>
@@ -130,7 +131,7 @@
 
                         <!-- Payment Method Information -->
                         <div class="col-12">
-                            <div class="payment-method-info" id="bank_transfer_info" style="display: none;">
+                            <div class="payment-method-info" id="bank_transfer_info">
                                 <div class="alert alert-info">
                                     <h6><em class="icon ni ni-building"></em> Bank Transfer</h6>
                                     <ul class="list-unstyled mb-0">
@@ -142,7 +143,7 @@
                                 </div>
                             </div>
 
-                            <div class="payment-method-info" id="paypal_info" style="display: none;">
+                            <div class="payment-method-info" id="paypal_info">
                                 <div class="alert alert-primary">
                                     <h6><em class="icon ni ni-paypal"></em> PayPal</h6>
                                     <ul class="list-unstyled mb-0">
@@ -154,7 +155,7 @@
                                 </div>
                             </div>
 
-                            <div class="payment-method-info" id="stripe_info" style="display: none;">
+                            <div class="payment-method-info" id="stripe_info">
                                 <div class="alert alert-success">
                                     <h6><em class="icon ni ni-cc-stripe"></em> Stripe</h6>
                                     <ul class="list-unstyled mb-0">
@@ -192,54 +193,55 @@
 </div>
 
 <script>
-// Payment method field visibility
+// Payment method field visibility (JavaScript enhancement only)
 function showPaymentMethodFields() {
     const paymentMethodSelect = document.getElementById('payment_method');
     const selectedMethod = paymentMethodSelect.value;
-    const paymentMethodFields = document.querySelectorAll('.payment-method-fields');
-    const paymentMethodInfos = document.querySelectorAll('.payment-method-info');
     
     // Hide all fields and info
-    paymentMethodFields.forEach(field => {
-        field.style.display = 'none';
-        const inputs = field.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            input.removeAttribute('required');
-        });
-    });
+    document.getElementById('bank_transfer_fields').style.display = 'none';
+    document.getElementById('paypal_fields').style.display = 'none';
+    document.getElementById('stripe_fields').style.display = 'none';
+    document.getElementById('bank_transfer_info').style.display = 'none';
+    document.getElementById('paypal_info').style.display = 'none';
+    document.getElementById('stripe_info').style.display = 'none';
     
-    paymentMethodInfos.forEach(info => {
-        info.style.display = 'none';
-    });
+    // Remove required attributes
+    document.getElementById('bank_name').removeAttribute('required');
+    document.getElementById('account_number').removeAttribute('required');
+    document.getElementById('routing_number').removeAttribute('required');
+    document.getElementById('paypal_email').removeAttribute('required');
+    document.getElementById('stripe_account_id').removeAttribute('required');
 
     // Show selected method fields and info
     if (selectedMethod) {
-        const selectedFields = document.getElementById(selectedMethod + '_fields');
-        const selectedInfo = document.getElementById(selectedMethod + '_info');
-        
-        if (selectedFields) {
-            selectedFields.style.display = 'block';
-            // Make visible fields required based on method
-            if (selectedMethod === 'bank_transfer') {
-                document.getElementById('account_number').setAttribute('required', '');
-                document.getElementById('routing_number').setAttribute('required', '');
-                document.getElementById('bank_name').setAttribute('required', '');
-            } else if (selectedMethod === 'paypal') {
-                document.getElementById('paypal_email').setAttribute('required', '');
-            } else if (selectedMethod === 'stripe') {
-                document.getElementById('stripe_account_id').setAttribute('required', '');
-            }
-        }
-        
-        if (selectedInfo) {
-            selectedInfo.style.display = 'block';
+        if (selectedMethod === 'bank_transfer') {
+            document.getElementById('bank_transfer_fields').style.display = 'block';
+            document.getElementById('bank_transfer_info').style.display = 'block';
+            document.getElementById('bank_name').setAttribute('required', '');
+            document.getElementById('account_number').setAttribute('required', '');
+            document.getElementById('routing_number').setAttribute('required', '');
+        } else if (selectedMethod === 'paypal') {
+            document.getElementById('paypal_fields').style.display = 'block';
+            document.getElementById('paypal_info').style.display = 'block';
+            document.getElementById('paypal_email').setAttribute('required', '');
+        } else if (selectedMethod === 'stripe') {
+            document.getElementById('stripe_fields').style.display = 'block';
+            document.getElementById('stripe_info').style.display = 'block';
+            document.getElementById('stripe_account_id').setAttribute('required', '');
         }
     }
 }
 
-// Initialize when modal is shown
-$('#payment-details').on('shown.bs.modal', function () {
-    showPaymentMethodFields();
-    document.getElementById('payment_method').addEventListener('change', showPaymentMethodFields);
+// Initialize when modal is shown (JavaScript enhancement only)
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethodSelect = document.getElementById('payment_method');
+    if (paymentMethodSelect) {
+        // Set initial state based on selected value
+        showPaymentMethodFields();
+        
+        // Add event listener for changes
+        paymentMethodSelect.addEventListener('change', showPaymentMethodFields);
+    }
 });
 </script>

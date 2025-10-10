@@ -214,32 +214,16 @@
                                         </div>
                                         <div class="nk-tb-col nk-tb-col-tools">
                                             <ul class="nk-tb-actions gx-1">
-                                                <li class="nk-tb-action-hidden">
-                                                    <a href="{{ route('admin.payouts.show', $payout) }}" class="btn btn-trigger btn-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="View Details">
-                                                        <em class="icon ni ni-eye-fill"></em>
-                                                    </a>
-                                                </li>
-                                                @if($payout->status === 'pending')
-                                                    <li class="nk-tb-action-hidden">
-                                                        <a href="#" class="btn btn-trigger btn-icon text-success" onclick="reviewPayout({{ $payout->id }}, 'approve')" data-bs-toggle="tooltip" data-bs-placement="top" title="Approve">
-                                                            <em class="icon ni ni-check-fill"></em>
-                                                        </a>
-                                                    </li>
-                                                    <li class="nk-tb-action-hidden">
-                                                        <a href="#" class="btn btn-trigger btn-icon text-danger" onclick="reviewPayout({{ $payout->id }}, 'deny')" data-bs-toggle="tooltip" data-bs-placement="top" title="Deny">
-                                                            <em class="icon ni ni-cross-fill"></em>
-                                                        </a>
-                                                    </li>
-                                                @endif
+                                               
                                                 <li>
                                                     <div class="drodown">
                                                         <a href="#" class="dropdown-toggle btn btn-icon btn-trigger" data-bs-toggle="dropdown"><em class="icon ni ni-more-h"></em></a>
                                                         <div class="dropdown-menu dropdown-menu-end">
                                                             <ul class="link-list-opt no-bdr">
-                                                                <li><a href="{{ route('admin.payouts.show', $payout) }}"><em class="icon ni ni-eye"></em><span>View Details</span></a></li>
+                                                                <li><a href="#" onclick="viewPayout({{ $payout->id }}, event); return false;"><em class="icon ni ni-eye"></em><span>View Details</span></a></li>
                                                                 @if($payout->status === 'pending')
-                                                                    <li><a href="#" onclick="reviewPayout({{ $payout->id }}, 'approve')"><em class="icon ni ni-check"></em><span>Approve</span></a></li>
-                                                                    <li><a href="#" onclick="reviewPayout({{ $payout->id }}, 'deny')"><em class="icon ni ni-cross"></em><span>Deny</span></a></li>
+                                                                    <li><a href="#" onclick="openReviewModal({{ $payout->id }}, 'approve', event); return false;"><em class="icon ni ni-check"></em><span>Approve</span></a></li>
+                                                                    <li><a href="#" onclick="openReviewModal({{ $payout->id }}, 'deny', event); return false;"><em class="icon ni ni-cross"></em><span>Deny</span></a></li>
                                                                 @endif
                                                             </ul>
                                                         </div>
@@ -271,12 +255,102 @@
     </div>
 </div>
 
+<!-- View Payout Modal -->
+
+<div class="modal fade" tabindex="-1" id="viewModal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payout Details</h5>
+                <a href="#" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <em class="icon ni ni-cross"></em>
+                </a>
+            </div>
+            <div class="modal-body">
+                <div class="row gy-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Author</label>
+                            <div class="form-control-wrap">
+                                <div class="user-card">
+                                    <div class="user-avatar bg-primary-dim">
+                                        <span id="viewAuthorInitials"></span>
+                                    </div>
+                                    <div class="user-info">
+                                        <span class="tb-lead" id="viewAuthorName"></span>
+                                        <span id="viewAuthorEmail"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Amount Requested</label>
+                            <div class="form-control-wrap">
+                                <input type="text" class="form-control form-control-lg" id="viewAmount" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <div class="form-control-wrap">
+                                <span class="badge badge-dot" id="viewStatusBadge">
+                                    <span id="viewStatus"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Requested Date</label>
+                            <div class="form-control-wrap">
+                                <input type="text" class="form-control" id="viewRequestedDate" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Processed Date</label>
+                            <div class="form-control-wrap">
+                                <input type="text" class="form-control" id="viewProcessedDate" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Payment Method</label>
+                            <div class="form-control-wrap">
+                                <input type="text" class="form-control" id="viewPaymentMethod" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Admin Notes</label>
+                            <div class="form-control-wrap">
+                                <textarea class="form-control" id="viewAdminNotes" rows="3" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <!-- Review Modal -->
 <div class="modal fade" tabindex="-1" id="reviewModal">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Review Payout Request</h5>
+                <h5 class="modal-title" id="reviewModalTitle">Review Payout Request</h5>
                 <a href="#" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <em class="icon ni ni-cross"></em>
                 </a>
@@ -288,14 +362,38 @@
                     <input type="hidden" id="reviewAction" name="action">
                     
                     <div class="form-group">
-                        <label class="form-label">Admin Notes</label>
-                        <textarea class="form-control" name="admin_notes" rows="4" placeholder="Optional notes for the author..."></textarea>
+                        <label class="form-label">Amount Requested</label>
+                        <div class="form-control-wrap">
+                            <input type="text" class="form-control" id="reviewAmount" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Author</label>
+                        <div class="form-control-wrap">
+                            <div class="user-card">
+                                <div class="user-avatar bg-primary-dim">
+                                    <span id="reviewAuthorInitials"></span>
+                                </div>
+                                <div class="user-info">
+                                    <span class="tb-lead" id="reviewAuthorName"></span>
+                                    <span id="reviewAuthorEmail"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="adminNotesField">
+                        <label class="form-label" id="adminNotesLabel">Admin Notes</label>
+                        <div class="form-control-wrap">
+                            <textarea class="form-control" name="admin_notes" id="adminNotes" rows="4" placeholder="Enter notes for the author..."></textarea>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+                <button type="button" class="btn btn-primary" id="submitReviewBtn">Submit Review</button>
             </div>
         </div>
     </div>
@@ -311,25 +409,164 @@ document.getElementById('uid-all').addEventListener('change', function() {
     });
 });
 
-function reviewPayout(payoutId, action) {
-    document.getElementById('payoutId').value = payoutId;
-    document.getElementById('reviewAction').value = action;
+// View payout details
+function viewPayout(payoutId, event) {
+    // Prevent default anchor behavior
+    if (event) {
+        event.preventDefault();
+    }
     
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
-    modal.show();
+    fetch(`/admin/payouts/${payoutId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const payout = data.payout;
+            
+            // Populate view modal
+            document.getElementById('viewAuthorInitials').textContent = payout.user.name.substring(0, 2).toUpperCase();
+            document.getElementById('viewAuthorName').textContent = payout.user.name;
+            document.getElementById('viewAuthorEmail').textContent = payout.user.email;
+            document.getElementById('viewAmount').value = '$' + parseFloat(payout.amount_requested).toFixed(2);
+            
+            // Set status badge
+            const statusElement = document.getElementById('viewStatus');
+            const statusBadge = document.getElementById('viewStatusBadge');
+            statusElement.textContent = payout.status.charAt(0).toUpperCase() + payout.status.slice(1);
+            
+            // Remove existing classes
+            statusBadge.className = 'badge badge-dot';
+            
+            // Add appropriate class based on status
+            if (payout.status === 'pending') {
+                statusBadge.classList.add('badge-warning');
+            } else if (payout.status === 'approved') {
+                statusBadge.classList.add('badge-success');
+            } else if (payout.status === 'denied') {
+                statusBadge.classList.add('badge-danger');
+            }
+            
+            document.getElementById('viewRequestedDate').value = new Date(payout.created_at).toLocaleDateString();
+            document.getElementById('viewProcessedDate').value = payout.processed_at ? new Date(payout.processed_at).toLocaleDateString() : 'Not processed yet';
+            
+            // Payment method from user payment details
+            let paymentMethod = 'Bank Transfer';
+            if (payout.user.payment_details) {
+                try {
+                    const paymentDetails = typeof payout.user.payment_details === 'string' 
+                        ? JSON.parse(payout.user.payment_details) 
+                        : payout.user.payment_details;
+                    paymentMethod = paymentDetails.bank_name || 'Bank Transfer';
+                } catch (e) {
+                    paymentMethod = 'Bank Transfer';
+                }
+            }
+            document.getElementById('viewPaymentMethod').value = paymentMethod;
+            
+            document.getElementById('viewAdminNotes').value = payout.admin_notes || 'No notes provided';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('viewModal'));
+            modal.show();
+        } else {
+            Swal.fire('Error!', 'Failed to load payout details.', 'error');
+        }
+    })
+    .catch(error => {
+        Swal.fire('Error!', 'Something went wrong: ' + error.message, 'error');
+    });
+    
+    return false;
 }
 
-function submitReview() {
+// Open review modal for approve/deny
+function openReviewModal(payoutId, action, event) {
+    // Prevent default anchor behavior
+    if (event) {
+        event.preventDefault();
+    }
+    
+    fetch(`/admin/payouts/${payoutId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const payout = data.payout;
+            
+            // Set payout ID and action
+            document.getElementById('payoutId').value = payoutId;
+            document.getElementById('reviewAction').value = action;
+            
+            // Populate review modal
+            document.getElementById('reviewAmount').value = '$' + parseFloat(payout.amount_requested).toFixed(2);
+            document.getElementById('reviewAuthorInitials').textContent = payout.user.name.substring(0, 2).toUpperCase();
+            document.getElementById('reviewAuthorName').textContent = payout.user.name;
+            document.getElementById('reviewAuthorEmail').textContent = payout.user.email;
+            
+            // Set modal title and button text based on action
+            const modalTitle = document.getElementById('reviewModalTitle');
+            const submitBtn = document.getElementById('submitReviewBtn');
+            
+            if (action === 'approve') {
+                modalTitle.textContent = 'Approve Payout Request';
+                submitBtn.textContent = 'Approve Payout';
+                submitBtn.className = 'btn btn-success';
+                document.getElementById('adminNotesLabel').textContent = 'Approval Notes (Optional)';
+                document.getElementById('adminNotes').placeholder = 'Optional notes for the author...';
+                document.getElementById('adminNotes').required = false;
+            } else {
+                modalTitle.textContent = 'Deny Payout Request';
+                submitBtn.textContent = 'Deny Payout';
+                submitBtn.className = 'btn btn-danger';
+                document.getElementById('adminNotesLabel').textContent = 'Denial Reason (Required)';
+                document.getElementById('adminNotes').placeholder = 'Reason for denying this payout...';
+                document.getElementById('adminNotes').required = true;
+            }
+            
+            // Clear previous notes
+            document.getElementById('adminNotes').value = '';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            modal.show();
+        } else {
+            Swal.fire('Error!', 'Failed to load payout details.', 'error');
+        }
+    })
+    .catch(error => {
+        Swal.fire('Error!', 'Something went wrong: ' + error.message, 'error');
+    });
+    
+    return false;
+}
+
+// Submit review (approve/deny)
+document.getElementById('submitReviewBtn').addEventListener('click', function() {
     const form = document.getElementById('reviewForm');
     const formData = new FormData(form);
     const payoutId = formData.get('payout_id');
     const action = formData.get('action');
     
+    // Validate form for deny action
+    if (action === 'deny' && !formData.get('admin_notes')) {
+        Swal.fire('Error!', 'Please provide a reason for denying this payout.', 'error');
+        return;
+    }
+    
     fetch(`/admin/payouts/${payoutId}/${action}`, {
         method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
@@ -344,20 +581,25 @@ function submitReview() {
         }
     })
     .catch(error => {
-        Swal.fire('Error!', 'Something went wrong.', 'error');
+        Swal.fire('Error!', 'Something went wrong: ' + error.message, 'error');
     });
     
     // Hide modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
-    modal.hide();
-}
+    if (modal) {
+        modal.hide();
+    }
+});
 
 function bulkAction(action) {
+    // Prevent default anchor behavior
+    event.preventDefault();
+    
     const selectedPayouts = Array.from(document.querySelectorAll('.payout-checkbox:checked')).map(cb => cb.value);
     
     if (selectedPayouts.length === 0) {
         Swal.fire('Warning!', 'Please select at least one payout request.', 'warning');
-        return;
+        return false;
     }
     
     const actionText = action === 'approve' ? 'approve' : 'deny';
@@ -377,6 +619,8 @@ function bulkAction(action) {
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     action: action,
@@ -394,10 +638,12 @@ function bulkAction(action) {
                 }
             })
             .catch(error => {
-                Swal.fire('Error!', 'Something went wrong.', 'error');
+                Swal.fire('Error!', 'Something went wrong: ' + error.message, 'error');
             });
         }
     });
+    
+    return false;
 }
 </script>
 @endpush

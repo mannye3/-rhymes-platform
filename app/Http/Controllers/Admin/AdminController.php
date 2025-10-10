@@ -8,19 +8,177 @@ use App\Models\User;
 use App\Models\Book;
 use App\Models\Payout;
 use App\Models\WalletTransaction;
+use App\Services\UserActivityService;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 class AdminController extends Controller
 {
-    public function __construct()
+    protected $userActivityService;
+
+    public function __construct(UserActivityService $userActivityService)
     {
         $this->middleware(['auth', 'role:admin']);
+        $this->userActivityService = $userActivityService;
     }
 
     public function dashboard()
     {
         $analytics = $this->getDashboardAnalytics();
         return view('admin.dashboard', compact('analytics'));
+    }
+
+    public function userActivity(Request $request)
+    {
+        // Log that the admin accessed the user activity page
+        $this->userActivityService->logActivity('page_view', 'Admin accessed user activity page', [
+            'page' => 'user_activity',
+            'period' => $request->get('period', 30)
+        ]);
+        
+        $period = $request->get('period', 30);
+        $startDate = Carbon::now()->subDays($period);
+        $endDate = Carbon::now();
+
+        // Get user activities
+        $activities = $this->getUserActivities($startDate, $endDate);
+        
+        // Paginate activities
+        $perPage = 20;
+        $currentPage = Paginator::resolveCurrentPage('page');
+        $currentItems = array_slice($activities, ($currentPage - 1) * $perPage, $perPage);
+        $paginatedActivities = new LengthAwarePaginator($currentItems, count($activities), $perPage, $currentPage, [
+            'path' => Paginator::resolveCurrentPath(),
+            'pageName' => 'page',
+        ]);
+
+        return view('admin.users.activity', compact('paginatedActivities', 'period'));
+    }
+
+    private function getUserActivities($startDate, $endDate)
+    {
+        $activities = [];
+
+        // User registrations
+        $registrations = User::whereBetween('created_at', [$startDate, $endDate])
+            ->latest()
+            ->get();
+            
+        foreach ($registrations as $user) {
+            $activities[] = [
+                'type' => 'registration',
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'description' => "User registered: {$user->name}",
+                'timestamp' => $user->created_at,
+                'icon' => 'user-add',
+                'color' => 'primary'
+            ];
+        }
+
+        // User logins
+        $logins = User::whereBetween('last_login_at', [$startDate, $endDate])
+            ->whereNotNull('last_login_at')
+            ->latest('last_login_at')
+            ->get();
+            
+        foreach ($logins as $user) {
+            $activities[] = [
+                'type' => 'login',
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'description' => "User logged in: {$user->name}",
+                'timestamp' => $user->last_login_at,
+                'icon' => 'sign-in-alt',
+                'color' => 'success'
+            ];
+        }
+
+        // Book submissions
+        $bookSubmissions = Book::whereBetween('created_at', [$startDate, $endDate])
+            ->with('user')
+            ->latest()
+            ->get();
+            
+        foreach ($bookSubmissions as $book) {
+            $userName = $book->user ? $book->user->name : 'Unknown';
+            $activities[] = [
+                'type' => 'book_submission',
+                'user_id' => $book->user_id,
+                'user_name' => $userName,
+                'description' => "Book submitted: \"{$book->title}\" by {$userName}",
+                'timestamp' => $book->created_at,
+                'icon' => 'book',
+                'color' => 'info'
+            ];
+        }
+
+        // Book status changes
+        $bookStatusChanges = Book::whereBetween('updated_at', [$startDate, $endDate])
+            ->whereColumn('created_at', '!=', 'updated_at')
+            ->with('user')
+            ->latest('updated_at')
+            ->get();
+            
+        foreach ($bookStatusChanges as $book) {
+            $userName = $book->user ? $book->user->name : 'Unknown';
+            $activities[] = [
+                'type' => 'book_status_change',
+                'user_id' => $book->user_id,
+                'user_name' => $userName,
+                'description' => "Book status updated: \"{$book->title}\" is now {$book->status}",
+                'timestamp' => $book->updated_at,
+                'icon' => 'edit',
+                'color' => 'warning'
+            ];
+        }
+
+        // Payout requests
+        $payouts = Payout::whereBetween('created_at', [$startDate, $endDate])
+            ->with('user')
+            ->latest()
+            ->get();
+            
+        foreach ($payouts as $payout) {
+            $userName = $payout->user ? $payout->user->name : 'Unknown';
+            $activities[] = [
+                'type' => 'payout_request',
+                'user_id' => $payout->user_id,
+                'user_name' => $userName,
+                'description' => "Payout requested: \$" . $payout->amount_requested . " by {$userName}",
+                'timestamp' => $payout->created_at,
+                'icon' => 'tranx',
+                'color' => 'warning'
+            ];
+        }
+
+        // Payout status changes
+        $payoutStatusChanges = Payout::whereBetween('updated_at', [$startDate, $endDate])
+            ->whereColumn('created_at', '!=', 'updated_at')
+            ->with('user')
+            ->latest('updated_at')
+            ->get();
+            
+        foreach ($payoutStatusChanges as $payout) {
+            $userName = $payout->user ? $payout->user->name : 'Unknown';
+            $activities[] = [
+                'type' => 'payout_status_change',
+                'user_id' => $payout->user_id,
+                'user_name' => $userName,
+                'description' => "Payout status updated: \$" . $payout->amount_requested . " is now {$payout->status}",
+                'timestamp' => $payout->updated_at,
+                'icon' => 'edit',
+                'color' => 'warning'
+            ];
+        }
+
+        // Sort activities by timestamp (newest first)
+        usort($activities, function($a, $b) {
+            return strtotime($b['timestamp']) <=> strtotime($a['timestamp']);
+        });
+
+        return $activities;
     }
 
     private function getDashboardAnalytics()
