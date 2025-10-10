@@ -18,6 +18,18 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Author\AuthorController;
 use App\Http\Controllers\Author\AuthorProfileController;
 use App\Http\Controllers\User\BookSubmissionController;
+use Illuminate\Support\Facades\Artisan;
+
+
+Route::get('/run-seeder', function () {
+    try {
+        Artisan::call('db:seed', ['--force' => true]);
+        return '✅ Database seeding completed successfully!';
+    } catch (Exception $e) {
+        return '❌ Error: ' . $e->getMessage();
+    }
+});
+
 
 // Test route for payment form submission (only in local environment)
 if (app()->environment('local')) {
