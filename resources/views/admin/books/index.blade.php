@@ -18,7 +18,7 @@
                             <p>Review, approve, and manage all books submitted by authors.</p>
                         </div>
                     </div>
-                    <div class="nk-block-head-content">
+                    {{-- <div class="nk-block-head-content">
                         <div class="toggle-wrap nk-block-tools-toggle">
                             <a href="#" class="btn btn-icon btn-trigger toggle-expand me-n1" data-target="pageMenu"><em class="icon ni ni-more-v"></em></a>
                             <div class="toggle-expand-content" data-content="pageMenu">
@@ -28,7 +28,7 @@
                                 </ul>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
 
@@ -77,12 +77,12 @@
                         <div class="card-inner p-0">
                             <div class="nk-tb-list nk-tb-ulist">
                                 <div class="nk-tb-item nk-tb-head">
-                                    <div class="nk-tb-col nk-tb-col-check">
+                                    {{-- <div class="nk-tb-col nk-tb-col-check">
                                         <div class="custom-control custom-control-sm custom-checkbox notext">
                                             <input type="checkbox" class="custom-control-input" id="uid-all">
                                             <label class="custom-control-label" for="uid-all"></label>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <div class="nk-tb-col"><span class="sub-text">Book</span></div>
                                     <div class="nk-tb-col tb-col-mb"><span class="sub-text">Author</span></div>
                                     <div class="nk-tb-col tb-col-md"><span class="sub-text">Status</span></div>
@@ -103,12 +103,12 @@
 
                                 @forelse($books as $book)
                                     <div class="nk-tb-item">
-                                        <div class="nk-tb-col nk-tb-col-check">
+                                        {{-- <div class="nk-tb-col nk-tb-col-check">
                                             <div class="custom-control custom-control-sm custom-checkbox notext">
                                                 <input type="checkbox" class="custom-control-input book-checkbox" id="uid{{ $book->id }}" value="{{ $book->id }}">
                                                 <label class="custom-control-label" for="uid{{ $book->id }}"></label>
                                             </div>
-                                        </div>
+                                        </div> --}}
                                         <div class="nk-tb-col">
                                             <div class="user-card">
                                                 <div class="user-avatar bg-primary-dim">
@@ -116,7 +116,7 @@
                                                 </div>
                                                 <div class="user-info">
                                                     <span class="tb-lead">{{ $book->title }}</span>
-                                                    <span>{{ $book->genre }} • ${{ number_format($book->price, 2) }}</span>
+                                                    <span>{{ $book->genre }} • ₦{{ number_format($book->price, 2) }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -144,7 +144,7 @@
                                                 $revenue = $book->walletTransactions->where('type', 'sale')->sum('amount');
                                             @endphp
                                             <span class="tb-lead">{{ $salesCount }}</span>
-                                            <span class="tb-sub">${{ number_format($revenue, 2) }}</span>
+                                            <span class="tb-sub">₦{{ number_format($revenue, 2) }}</span>
                                         </div>
                                         <div class="nk-tb-col tb-col-lg">
                                             <span>{{ $book->created_at->format('M d, Y') }}</span>
@@ -233,7 +233,7 @@
                         <p><strong>Author:</strong> {{ $book->user->name }}</p>
                         <p><strong>Email:</strong> {{ $book->user->email }}</p>
                         <p><strong>Genre:</strong> {{ $book->genre }}</p>
-                        <p><strong>Price:</strong> ${{ number_format($book->price, 2) }}</p>
+                        <p><strong>Price:</strong> ₦{{ number_format($book->price, 2) }}</p>
                     </div>
                     <div class="col-md-6">
                         <p><strong>Status:</strong> 
@@ -248,7 +248,7 @@
                             @endif
                         </p>
                         <p><strong>Sales:</strong> {{ $book->getSalesCount() }}</p>
-                        <p><strong>Revenue:</strong> ${{ number_format($book->getTotalSales(), 2) }}</p>
+                        <p><strong>Revenue:</strong> ₦{{ number_format($book->getTotalSales(), 2) }}</p>
                         <p><strong>Submitted:</strong> {{ $book->created_at->format('M d, Y') }}</p>
                     </div>
                 </div>

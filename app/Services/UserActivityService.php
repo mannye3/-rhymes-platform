@@ -152,7 +152,7 @@ class UserActivityService
      */
     public function logPayoutRequest(int $payoutId, float $amount, ?int $userId = null): UserActivity
     {
-        return $this->logActivity('payout_request', "Payout requested: $" . number_format($amount, 2), [
+        return $this->logActivity('payout_request', "Payout requested: ₦" . number_format($amount, 2), [
             'payout_id' => $payoutId,
             'amount' => $amount
         ], $userId);
@@ -170,7 +170,7 @@ class UserActivityService
      */
     public function logPayoutStatusChange(int $payoutId, float $amount, string $oldStatus, string $newStatus, ?int $userId = null): UserActivity
     {
-        return $this->logActivity('payout_status_change', "Payout status changed: $" . number_format($amount, 2) . " from {$oldStatus} to {$newStatus}", [
+        return $this->logActivity('payout_status_change', "Payout status changed: ₦" . number_format($amount, 2) . " from {$oldStatus} to {$newStatus}", [
             'payout_id' => $payoutId,
             'amount' => $amount,
             'old_status' => $oldStatus,

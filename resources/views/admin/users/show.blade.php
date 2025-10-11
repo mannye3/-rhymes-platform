@@ -183,9 +183,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Recent Books -->
+                                     <!-- Recent Books -->
                             @if($user->books->count() > 0)
                                 <div class="card card-bordered card-full mb-4">
                                     <div class="card-inner">
@@ -286,7 +284,12 @@
                                                 <div class="alert-cta">
                                                     <h6>Promote to Author</h6>
                                                     <p>This user is not currently an author. You can promote them to author status to allow them to publish books.</p>
-                                                    <button class="btn btn-info" onclick="promoteToAuthor({{ $user->id }})">Promote to Author</button>
+                                                    <form method="POST" action="{{ route('admin.users.promote-author', $user) }}">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-info" data-confirm-promote data-confirm-message="Are you sure you want to promote {{ $user->name }} to author? This will give them author privileges and allow them to publish books.">
+                                                            Promote to Author
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -303,39 +306,7 @@
 
 @push('scripts')
 <script>
-function promoteToAuthor(userId) {
-    Swal.fire({
-        title: 'Promote to Author?',
-        text: 'This will give the user author privileges and allow them to publish books.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, promote!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`/admin/users/${userId}/promote-author`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Promoted!', 'User has been promoted to author.', 'success')
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire('Error!', data.message || 'Something went wrong.', 'error');
-                }
-            })
-            .catch(error => {
-                Swal.fire('Error!', 'Something went wrong.', 'error');
-            });
-        }
-    });
-}
+
 </script>
 @endpush
 @endsection

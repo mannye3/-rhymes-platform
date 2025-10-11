@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'User Management | Admin Panel')
+@section('title', 'Trashed Users | Admin Panel')
 
-@section('page-title', 'User Management')
+@section('page-title', 'Trashed Users')
 
-@section('page-description', 'Manage platform users and permissions')
+@section('page-description', 'Manage deleted platform users')
 
 @section('content')
 <div class="nk-content nk-content-fluid">
@@ -13,9 +13,9 @@
             <div class="nk-block-head nk-block-head-sm">
                 <div class="nk-block-between">
                     <div class="nk-block-head-content">
-                        <h3 class="nk-block-title page-title">Users</h3>
+                        <h3 class="nk-block-title page-title">Trashed Users</h3>
                         <div class="nk-block-des text-soft">
-                            <p>Manage all platform users, roles, and permissions.</p>
+                            <p>Manage deleted platform users. These users have been soft deleted and can be restored.</p>
                         </div>
                     </div>
                     <div class="nk-block-head-content">
@@ -23,9 +23,7 @@
                             <a href="#" class="btn btn-icon btn-trigger toggle-expand me-n1" data-target="pageMenu"><em class="icon ni ni-more-v"></em></a>
                             <div class="toggle-expand-content" data-content="pageMenu">
                                 <ul class="nk-block-tools g-3">
-                                    <li><a href="{{ route('admin.users.create') }}" class="btn btn-primary"><em class="icon ni ni-plus"></em><span>Add User</span></a></li>
-                                    <li><a href="{{ route('admin.users.authors') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-users"></em><span>View Authors</span></a></li>
-                                    <li><a href="{{ route('admin.users.trashed') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-trash"></em><span>Trashed Users</span></a></li>
+                                    <li><a href="{{ route('admin.users.index') }}" class="btn btn-primary"><em class="icon ni ni-arrow-left"></em><span>Back to Users</span></a></li>
                                 </ul>
                             </div>
                         </div>
@@ -40,7 +38,7 @@
                             <div class="card-title-group">
                                 <div class="card-tools">
                                     <div class="form-inline flex-nowrap gx-3">
-                                        <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex gap-2">
+                                        <form method="GET" action="{{ route('admin.users.trashed') }}" class="d-flex gap-2">
                                             <div class="form-wrap w-150px">
                                                 <select name="role" class="form-select form-select-sm">
                                                     <option value="">All Roles</option>
@@ -51,18 +49,11 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="form-wrap w-150px">
-                                                <select name="status" class="form-select form-select-sm">
-                                                    <option value="">All Status</option>
-                                                    <option value="verified" {{ request('status') === 'verified' ? 'selected' : '' }}>Verified</option>
-                                                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Unverified</option>
-                                                </select>
-                                            </div>
                                             <div class="form-wrap flex-md-nowrap">
                                                 <div class="form-icon form-icon-right">
                                                     <em class="icon ni ni-search"></em>
                                                 </div>
-                                                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search users..." value="{{ request('search') }}">
+                                                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search trashed users..." value="{{ request('search') }}">
                                             </div>
                                             <div class="btn-wrap">
                                                 <button type="submit" class="btn btn-sm btn-icon btn-primary"><em class="icon ni ni-search"></em></button>
@@ -96,105 +87,56 @@
                         <div class="card-inner p-0">
                             <div class="nk-tb-list nk-tb-ulist">
                                 <div class="nk-tb-item nk-tb-head">
-                                    {{-- <div class="nk-tb-col nk-tb-col-check">
-                                        <div class="custom-control custom-control-sm custom-checkbox notext">
-                                            <input type="checkbox" class="custom-control-input" id="uid">
-                                            <label class="custom-control-label" for="uid"></label>
-                                        </div>
-                                    </div> --}}
                                     <div class="nk-tb-col"><span class="sub-text">User</span></div>
                                     <div class="nk-tb-col tb-col-mb"><span class="sub-text">Role</span></div>
-                                    <div class="nk-tb-col tb-col-md"><span class="sub-text">Status</span></div>
+                                    <div class="nk-tb-col tb-col-md"><span class="sub-text">Deleted At</span></div>
                                     <div class="nk-tb-col tb-col-lg"><span class="sub-text">Joined</span></div>
                                     <div class="nk-tb-col nk-tb-col-tools text-end">
-                                        <div class="dropdown">
-                                            <a href="#" class="btn btn-xs btn-outline-light btn-icon dropdown-toggle" data-bs-toggle="dropdown"><em class="icon ni ni-plus"></em></a>
-                                            <div class="dropdown-menu dropdown-menu-end">
-                                                <ul class="link-list-opt no-bdr">
-                                                    <li><a href="{{ route('admin.users.create') }}"><span>Add User</span></a></li>
-                                                </ul>
-                                            </div>
-                                        </div>
+                                        <span class="sub-text">Actions</span>
                                     </div>
                                 </div>
 
                                 @forelse($users as $user)
                                     <div class="nk-tb-item">
-                                        {{-- <div class="nk-tb-col nk-tb-col-check">
-                                            <div class="custom-control custom-control-sm custom-checkbox notext">
-                                                <input type="checkbox" class="custom-control-input" id="uid{{ $user->id }}">
-                                                <label class="custom-control-label" for="uid{{ $user->id }}"></label>
-                                            </div>
-                                        </div> --}}
                                         <div class="nk-tb-col">
                                             <div class="user-card">
-                                                <div class="user-avatar bg-primary">
+                                                <div class="user-avatar bg-danger">
                                                     <span>{{ strtoupper(substr($user->name, 0, 2)) }}</span>
                                                 </div>
                                                 <div class="user-info">
-                                                    <span class="tb-lead">{{ $user->name }} 
-                                                        @if($user->email_verified_at)
-                                                            <span class="dot dot-success d-md-none ms-1"></span>
-                                                        @endif
-                                                    </span>
+                                                    <span class="tb-lead">{{ $user->name }}</span>
                                                     <span>{{ $user->email }}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="nk-tb-col tb-col-mb">
                                             @foreach($user->roles as $role)
-                                                <span class="badge badge-sm badge-dim bg-outline-primary">{{ ucfirst($role->name) }}</span>
+                                                <span class="badge badge-sm badge-dim bg-outline-danger">{{ ucfirst($role->name) }}</span>
                                             @endforeach
                                         </div>
                                         <div class="nk-tb-col tb-col-md">
-                                            @if($user->email_verified_at)
-                                                <span class="tb-status text-success">Verified</span>
-                                            @else
-                                                <span class="tb-status text-warning">Unverified</span>
-                                            @endif
+                                            <span class="tb-sub">{{ $user->deleted_at->format('M d, Y H:i') }}</span>
                                         </div>
                                         <div class="nk-tb-col tb-col-lg">
                                             <span>{{ $user->created_at->format('M d, Y') }}</span>
                                         </div>
                                         <div class="nk-tb-col nk-tb-col-tools">
                                             <ul class="nk-tb-actions gx-1">
-                                                <li class="nk-tb-action-hidden">
-                                                    <a href="{{ route('admin.users.show', $user) }}" class="btn btn-trigger btn-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="View">
-                                                        <em class="icon ni ni-eye-fill"></em>
-                                                    </a>
-                                                </li>
-                                                <li class="nk-tb-action-hidden">
-                                                    <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-trigger btn-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                        <em class="icon ni ni-edit-fill"></em>
-                                                    </a>
-                                                </li>
                                                 <li>
                                                     <div class="drodown">
                                                         <a href="#" class="dropdown-toggle btn btn-icon btn-trigger" data-bs-toggle="dropdown"><em class="icon ni ni-more-h"></em></a>
                                                         <div class="dropdown-menu dropdown-menu-end">
                                                             <ul class="link-list-opt no-bdr">
-                                                                <li><a href="{{ route('admin.users.show', $user) }}"><em class="icon ni ni-eye"></em><span>View Details</span></a></li>
-                                                                <li><a href="{{ route('admin.users.edit', $user) }}"><em class="icon ni ni-edit"></em><span>Edit User</span></a></li>
-                                                                @if(!$user->hasRole('author'))
-                                                                    <li>
-                                                                        <form method="POST" action="{{ route('admin.users.promote-author', $user) }}">
-                                                                            @csrf
-                                                                            <button type="submit" class="btn btn-link text-start w-100" data-confirm-promote data-confirm-message="Are you sure you want to promote {{ $user->name }} to author?">
-                                                                                <em class="icon ni ni-user-add"></em><span>Promote to Author</span>
-                                                                            </button>
-                                                                        </form>
-                                                                    </li>
-                                                                @endif
-                                                                <li class="divider"></li>
                                                                 <li>
-                                                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}">
+                                                                    <form method="POST" action="{{ route('admin.users.restore', $user) }}">
                                                                         @csrf
-                                                                        @method('DELETE')
-                                                                        <button type="submit" class="btn btn-link text-start w-100 text-danger" data-confirm-delete data-confirm-message="Are you sure you want to delete {{ $user->name }}? This action cannot be undone!">
-                                                                            <em class="icon ni ni-trash"></em><span>Delete User</span>
+                                                                        <button type="submit" class="btn btn-link text-start w-100">
+                                                                            <em class="icon ni ni-recover"></em><span>Restore User</span>
                                                                         </button>
                                                                     </form>
                                                                 </li>
+                                                                <li class="divider"></li>
+                                                                <li><span class="text-muted small">Note: Hard delete not implemented</span></li>
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -207,7 +149,7 @@
                                         <div class="nk-tb-col">
                                             <div class="text-center py-4">
                                                 <em class="icon ni ni-users" style="font-size: 3rem; opacity: 0.3;"></em>
-                                                <p class="text-soft mt-2">No users found</p>
+                                                <p class="text-soft mt-2">No trashed users found</p>
                                             </div>
                                         </div>
                                     </div>
@@ -223,26 +165,17 @@
                                 @if ($users->hasPages())
                                     <div>
                                         {{ $users->appends([
-                                            // 'status' => request('status', ''),
-                                            // 'genre' => request('genre', ''),
-                                            // 'search' => request('search', '')
+                                            'role' => request('role', ''),
+                                            'search' => request('search', '')
                                         ])->links('vendor.pagination.bootstrap-4') }}
                                     </div>
                                 @endif
                             </div>
                         </div>
-
-                        <
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-@push('scripts')
-<script>
-// Remove the inline JavaScript functions since we're now using the global functions from admin.js
-</script>
-@endpush
 @endsection

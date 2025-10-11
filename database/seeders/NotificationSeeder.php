@@ -43,11 +43,11 @@ class NotificationSeeder extends Seeder
                     'notifiable_id' => $user->id,
                     'data' => json_encode([
                         'message' => 'You made a sale!',
-                        'amount' => '$15.99',
+                        'amount' => '₦15.99',
                         'book_title' => 'Sample Book Title'
                     ]),
                     'title' => 'New Sale',
-                    'message' => 'Congratulations! Someone purchased your book for $15.99.',
+                    'message' => 'Congratulations! Someone purchased your book for ₦15.99.',
                     'icon' => 'ni ni-coins',
                     'read_at' => null,
                     'created_at' => now()->subHours(5),

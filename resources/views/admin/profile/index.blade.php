@@ -163,7 +163,7 @@
                         </div>
 
                         <!-- Notification Preferences -->
-                        <div class="card card-bordered mt-4">
+                        {{-- <div class="card card-bordered mt-4">
                             <div class="card-inner">
                                 <div class="card-title-group align-start mb-3">
                                     <div class="card-title">
@@ -207,7 +207,7 @@
                                     </div>
                                 </form>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
 
                     <!-- Profile Sidebar -->
@@ -339,7 +339,7 @@
                         </div>
 
                         <!-- Quick Actions -->
-                        <div class="card card-bordered mt-4">
+                        {{-- <div class="card card-bordered mt-4">
                             <div class="card-inner">
                                 <div class="card-title-group align-start mb-3">
                                     <div class="card-title">
@@ -370,7 +370,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>

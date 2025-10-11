@@ -210,7 +210,7 @@
                                         <ul class="list-unstyled mb-0">
                                             <li>• Processing time: 3-5 business days</li>
                                             <li>• No processing fees</li>
-                                            <li>• Minimum payout: $10.00</li>
+                                            <li>• Minimum payout: ₦10.00</li>
                                             <li>• Available worldwide</li>
                                         </ul>
                                     </div>
@@ -222,7 +222,7 @@
                                         <ul class="list-unstyled mb-0">
                                             <li>• Processing time: 1-2 business days</li>
                                             <li>• No processing fees</li>
-                                            <li>• Minimum payout: $10.00</li>
+                                            <li>• Minimum payout: ₦10.00</li>
                                             <li>• Available in 200+ countries</li>
                                         </ul>
                                     </div>
@@ -234,7 +234,7 @@
                                         <ul class="list-unstyled mb-0">
                                             <li>• Processing time: 2-7 business days</li>
                                             <li>• No processing fees</li>
-                                            <li>• Minimum payout: $10.00</li>
+                                            <li>• Minimum payout: ₦10.00</li>
                                             <li>• Available in 40+ countries</li>
                                         </ul>
                                     </div>

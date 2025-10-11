@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\UserActivityService;
+use App\Services\UserService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,6 +15,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(UserActivityService::class, function ($app) {
             return new UserActivityService();
+        });
+
+        $this->app->singleton(UserService::class, function ($app) {
+            return new UserService();
         });
     }
 

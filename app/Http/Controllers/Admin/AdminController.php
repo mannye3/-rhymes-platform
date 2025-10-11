@@ -8,334 +8,358 @@ use App\Models\User;
 use App\Models\Book;
 use App\Models\Payout;
 use App\Models\WalletTransaction;
-use App\Services\UserActivityService;
 use Carbon\Carbon;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 
 class AdminController extends Controller
 {
-    protected $userActivityService;
-
-    public function __construct(UserActivityService $userActivityService)
-    {
-        $this->middleware(['auth', 'role:admin']);
-        $this->userActivityService = $userActivityService;
-    }
-
     public function dashboard()
     {
+        // Prepare analytics data
         $analytics = $this->getDashboardAnalytics();
+        
         return view('admin.dashboard', compact('analytics'));
     }
 
-    public function userActivity(Request $request)
+    public function unifiedDashboard(Request $request)
     {
-        // Log that the admin accessed the user activity page
-        $this->userActivityService->logActivity('page_view', 'Admin accessed user activity page', [
-            'page' => 'user_activity',
-            'period' => $request->get('period', 30)
-        ]);
+        // Handle date filtering
+        $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : Carbon::now()->subDays(30);
+        $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : Carbon::now();
         
-        $period = $request->get('period', 30);
-        $startDate = Carbon::now()->subDays($period);
-        $endDate = Carbon::now();
-
-        // Get user activities
-        $activities = $this->getUserActivities($startDate, $endDate);
+        // Get all data for the unified dashboard
+        $overview = $this->getDashboardAnalytics();
+        $analytics = $this->getAnalyticsData($request, $startDate, $endDate);
+        $sales = $this->getSalesData($request, $startDate, $endDate);
+        $topAuthors = $this->getTopAuthors($request, $startDate, $endDate);
+        $topBooks = $this->getTopBooks($request, $startDate, $endDate);
+        $genreData = $this->getGenrePerformance($request, $startDate, $endDate);
+        $recentTransactions = $this->getRecentTransactions($startDate, $endDate);
         
-        // Paginate activities
-        $perPage = 20;
-        $currentPage = Paginator::resolveCurrentPage('page');
-        $currentItems = array_slice($activities, ($currentPage - 1) * $perPage, $perPage);
-        $paginatedActivities = new LengthAwarePaginator($currentItems, count($activities), $perPage, $currentPage, [
-            'path' => Paginator::resolveCurrentPath(),
-            'pageName' => 'page',
-        ]);
-
-        return view('admin.users.activity', compact('paginatedActivities', 'period'));
-    }
-
-    private function getUserActivities($startDate, $endDate)
-    {
-        $activities = [];
-
-        // User registrations
-        $registrations = User::whereBetween('created_at', [$startDate, $endDate])
-            ->latest()
-            ->get();
-            
-        foreach ($registrations as $user) {
-            $activities[] = [
-                'type' => 'registration',
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'description' => "User registered: {$user->name}",
-                'timestamp' => $user->created_at,
-                'icon' => 'user-add',
-                'color' => 'primary'
-            ];
-        }
-
-        // User logins
-        $logins = User::whereBetween('last_login_at', [$startDate, $endDate])
-            ->whereNotNull('last_login_at')
-            ->latest('last_login_at')
-            ->get();
-            
-        foreach ($logins as $user) {
-            $activities[] = [
-                'type' => 'login',
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'description' => "User logged in: {$user->name}",
-                'timestamp' => $user->last_login_at,
-                'icon' => 'sign-in-alt',
-                'color' => 'success'
-            ];
-        }
-
-        // Book submissions
-        $bookSubmissions = Book::whereBetween('created_at', [$startDate, $endDate])
-            ->with('user')
-            ->latest()
-            ->get();
-            
-        foreach ($bookSubmissions as $book) {
-            $userName = $book->user ? $book->user->name : 'Unknown';
-            $activities[] = [
-                'type' => 'book_submission',
-                'user_id' => $book->user_id,
-                'user_name' => $userName,
-                'description' => "Book submitted: \"{$book->title}\" by {$userName}",
-                'timestamp' => $book->created_at,
-                'icon' => 'book',
-                'color' => 'info'
-            ];
-        }
-
-        // Book status changes
-        $bookStatusChanges = Book::whereBetween('updated_at', [$startDate, $endDate])
-            ->whereColumn('created_at', '!=', 'updated_at')
-            ->with('user')
-            ->latest('updated_at')
-            ->get();
-            
-        foreach ($bookStatusChanges as $book) {
-            $userName = $book->user ? $book->user->name : 'Unknown';
-            $activities[] = [
-                'type' => 'book_status_change',
-                'user_id' => $book->user_id,
-                'user_name' => $userName,
-                'description' => "Book status updated: \"{$book->title}\" is now {$book->status}",
-                'timestamp' => $book->updated_at,
-                'icon' => 'edit',
-                'color' => 'warning'
-            ];
-        }
-
-        // Payout requests
-        $payouts = Payout::whereBetween('created_at', [$startDate, $endDate])
-            ->with('user')
-            ->latest()
-            ->get();
-            
-        foreach ($payouts as $payout) {
-            $userName = $payout->user ? $payout->user->name : 'Unknown';
-            $activities[] = [
-                'type' => 'payout_request',
-                'user_id' => $payout->user_id,
-                'user_name' => $userName,
-                'description' => "Payout requested: \$" . $payout->amount_requested . " by {$userName}",
-                'timestamp' => $payout->created_at,
-                'icon' => 'tranx',
-                'color' => 'warning'
-            ];
-        }
-
-        // Payout status changes
-        $payoutStatusChanges = Payout::whereBetween('updated_at', [$startDate, $endDate])
-            ->whereColumn('created_at', '!=', 'updated_at')
-            ->with('user')
-            ->latest('updated_at')
-            ->get();
-            
-        foreach ($payoutStatusChanges as $payout) {
-            $userName = $payout->user ? $payout->user->name : 'Unknown';
-            $activities[] = [
-                'type' => 'payout_status_change',
-                'user_id' => $payout->user_id,
-                'user_name' => $userName,
-                'description' => "Payout status updated: \$" . $payout->amount_requested . " is now {$payout->status}",
-                'timestamp' => $payout->updated_at,
-                'icon' => 'edit',
-                'color' => 'warning'
-            ];
-        }
-
-        // Sort activities by timestamp (newest first)
-        usort($activities, function($a, $b) {
-            return strtotime($b['timestamp']) <=> strtotime($a['timestamp']);
-        });
-
-        return $activities;
+        return view('admin.unified-dashboard', compact(
+            'overview', 
+            'analytics', 
+            'sales', 
+            'topAuthors', 
+            'topBooks', 
+            'genreData', 
+            'recentTransactions'
+        ));
     }
 
     private function getDashboardAnalytics()
     {
-        // Basic counts
+        // Get stats
         $totalUsers = User::count();
-        $totalAuthors = User::role('author')->count();
+        $totalAuthors = User::whereHas('roles', function($query) {
+            $query->where('name', 'author');
+        })->count();
+        
         $totalBooks = Book::count();
-        $pendingBooks = Book::where('status', 'pending')->count();
         $publishedBooks = Book::where('status', 'accepted')->count();
-        $rejectedBooks = Book::where('status', 'rejected')->count();
-
-        // Payout statistics
-        $totalPayouts = Payout::count();
+        $pendingBooks = Book::where('status', 'pending')->count();
+        
+        $totalRevenue = WalletTransaction::where('type', 'sale')->sum('amount');
+        
         $pendingPayouts = Payout::where('status', 'pending')->count();
+        $pendingPayoutAmount = Payout::where('status', 'pending')->sum('amount_requested');
+        
         $approvedPayouts = Payout::where('status', 'approved')->count();
         $totalPayoutAmount = Payout::where('status', 'approved')->sum('amount_requested');
-        $pendingPayoutAmount = Payout::where('status', 'pending')->sum('amount_requested');
-
-        // Revenue statistics
-        $totalRevenue = WalletTransaction::where('type', 'sale')->sum('amount');
+        
+        // Get this month and last month revenue
         $thisMonthRevenue = WalletTransaction::where('type', 'sale')
-            ->where('created_at', '>=', Carbon::now()->startOfMonth())
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->sum('amount');
+            
         $lastMonthRevenue = WalletTransaction::where('type', 'sale')
-            ->whereBetween('created_at', [
-                Carbon::now()->subMonth()->startOfMonth(),
-                Carbon::now()->subMonth()->endOfMonth()
-            ])
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
             ->sum('amount');
-
-        $revenueGrowth = $lastMonthRevenue > 0 
-            ? (($thisMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100 
-            : 0;
-
-        // Recent activity
-        $recentBooks = Book::with('user')->latest()->limit(5)->get();
-        $recentPayouts = Payout::with('user')->latest()->limit(5)->get();
-        $recentUsers = User::latest()->limit(5)->get();
-
-        // Monthly data for charts (last 6 months)
-        $monthlyData = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
-            $startOfMonth = $date->copy()->startOfMonth();
-            $endOfMonth = $date->copy()->endOfMonth();
-            
-            $monthlyRevenue = WalletTransaction::where('type', 'sale')
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->sum('amount');
-            
-            $monthlyBooks = Book::whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->count();
-            
-            $monthlyUsers = User::whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->count();
-
-            $monthlyData[] = [
-                'month' => $date->format('M Y'),
-                'revenue' => $monthlyRevenue,
-                'books' => $monthlyBooks,
-                'users' => $monthlyUsers,
-            ];
+        
+        // Calculate revenue growth
+        $revenueGrowth = 0;
+        if ($lastMonthRevenue > 0) {
+            $revenueGrowth = (($thisMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100;
         }
+        
+        // Get recent data
+        $recentBooks = Book::with('user')->orderBy('created_at', 'desc')->limit(5)->get();
+        $recentUsers = User::orderBy('created_at', 'desc')->limit(5)->get();
+        $recentPayouts = Payout::with('user')->orderBy('created_at', 'desc')->limit(5)->get();
+        
+        return [
+            'stats' => [
+                'total_users' => $totalUsers,
+                'total_authors' => $totalAuthors,
+                'total_revenue' => $totalRevenue,
+                'revenue_growth' => $revenueGrowth,
+                'total_books' => $totalBooks,
+                'published_books' => $publishedBooks,
+                'pending_books' => $pendingBooks,
+                'pending_payouts' => $pendingPayouts,
+                'pending_payout_amount' => $pendingPayoutAmount,
+                'approved_payouts' => $approvedPayouts,
+                'total_payout_amount' => $totalPayoutAmount,
+                'this_month_revenue' => $thisMonthRevenue,
+                'last_month_revenue' => $lastMonthRevenue,
+            ],
+            'recent' => [
+                'books' => $recentBooks,
+                'users' => $recentUsers,
+                'payouts' => $recentPayouts,
+            ]
+        ];
+    }
 
-        // Top performing books
-$topBooks = Book::select([
-        'books.id',
-        'books.title',
-        'books.description',
-        'books.price',
-        'books.status',
-        'books.user_id',
-        'books.created_at',
-        'books.updated_at'
-    ])
-    ->selectRaw('COUNT(wallet_transactions.id) as sales_count')
-    ->selectRaw('SUM(wallet_transactions.amount) as total_revenue')
-    ->leftJoin('wallet_transactions', function($join) {
-        $join->on('books.id', '=', 'wallet_transactions.book_id')
-             ->where('wallet_transactions.type', '=', 'sale');
-    })
-    ->with('user')
-    ->groupBy([
-        'books.id',
-        'books.title',
-        'books.description',
-        'books.price',
-        'books.status',
-        'books.user_id',
-        'books.created_at',
-        'books.updated_at'
-    ])
-    ->orderByDesc('total_revenue')
-    ->limit(10)
-    ->get();
+    private function getAnalyticsData($request, $startDate, $endDate)
+    {
+        return [
+            'active_users' => User::where('last_login_at', '>=', $startDate)->count(),
+            'new_users' => User::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'book_views' => rand(5000, 15000), // Mock data
+            'views_change' => 5.2,
+            'conversion_rate' => 3.5,
+            'author_retention' => 78.2,
+            'avg_session_duration' => 12,
+            'pages_per_session' => 3.4,
+            'bounce_rate' => 45.2,
+            'return_rate' => 32.1,
+            'gross_revenue' => WalletTransaction::where('type', 'sale')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('amount'),
+            'platform_revenue' => WalletTransaction::where('type', 'sale')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('amount') * 0.15,
+            'author_earnings' => WalletTransaction::where('type', 'sale')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('amount') * 0.85,
+            'payouts_paid' => WalletTransaction::where('type', 'payout')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('amount'),
+            'chartData' => $this->getAnalyticsChartData($startDate, $endDate)
+        ];
+    }
 
+    private function getSalesData($request, $startDate, $endDate)
+    {
+        // Get metrics for current period
+        $currentMetrics = $this->getSalesMetrics($startDate, $endDate);
+        
+        // Get metrics for previous period (for comparison)
+        $periodLength = $startDate->diffInDays($endDate);
+        $prevStartDate = $startDate->copy()->subDays($periodLength);
+        $prevEndDate = $startDate->copy()->subDay();
+        $previousMetrics = $this->getSalesMetrics($prevStartDate, $prevEndDate);
 
-        // Top authors by revenue
-        $topAuthors = User::select([
+        // Calculate percentage changes
+        $metrics = [
+            'total_revenue' => $currentMetrics['total_revenue'],
+            'total_sales' => $currentMetrics['total_sales'],
+            'avg_order_value' => $currentMetrics['avg_order_value'],
+            'platform_commission' => $currentMetrics['platform_commission'],
+            'commission_rate' => 15,
+            'revenue_change' => $this->calculatePercentageChange($previousMetrics['total_revenue'], $currentMetrics['total_revenue']),
+            'sales_change' => $this->calculatePercentageChange($previousMetrics['total_sales'], $currentMetrics['total_sales']),
+            'aov_change' => $this->calculatePercentageChange($previousMetrics['avg_order_value'], $currentMetrics['avg_order_value']),
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'chartData' => $this->getSalesChartData($startDate, $endDate)
+        ];
+    }
+
+    private function getTopAuthors($request, $startDate, $endDate)
+    {
+        return User::select([
                 'users.id',
                 'users.name',
                 'users.email',
-                'users.avatar',
-                'users.created_at',
-                'users.updated_at'
+                'users.created_at'
             ])
             ->selectRaw('SUM(wallet_transactions.amount) as total_earnings')
             ->selectRaw('COUNT(DISTINCT books.id) as books_count')
             ->join('books', 'users.id', '=', 'books.user_id')
-            ->leftJoin('wallet_transactions', function($join) {
+            ->leftJoin('wallet_transactions', function($join) use ($startDate, $endDate) {
                 $join->on('books.id', '=', 'wallet_transactions.book_id')
-                     ->where('wallet_transactions.type', '=', 'sale');
+                     ->where('wallet_transactions.type', '=', 'sale')
+                     ->whereBetween('wallet_transactions.created_at', [$startDate, $endDate]);
             })
             ->role('author')
             ->groupBy([
                 'users.id',
                 'users.name',
                 'users.email',
-                'users.avatar',
-                'users.created_at',
-                'users.updated_at'
+                'users.created_at'
             ])
             ->orderByDesc('total_earnings')
             ->limit(10)
             ->get();
+    }
+
+    private function getTopBooks($request, $startDate, $endDate)
+    {
+        return Book::select([
+                'books.id',
+                'books.title',
+                'books.user_id',
+                'books.price',
+                'books.genre',
+                'books.status',
+                'books.created_at'
+            ])
+            ->selectRaw('COUNT(wallet_transactions.id) as sales_count')
+            ->selectRaw('SUM(wallet_transactions.amount) as total_revenue')
+            ->leftJoin('wallet_transactions', function($join) use ($startDate, $endDate) {
+                $join->on('books.id', '=', 'wallet_transactions.book_id')
+                     ->where('wallet_transactions.type', '=', 'sale')
+                     ->whereBetween('wallet_transactions.created_at', [$startDate, $endDate]);
+            })
+            ->with('user')
+            ->groupBy([
+                'books.id',
+                'books.title',
+                'books.user_id',
+                'books.price',
+                'books.genre',
+                'books.status',
+                'books.created_at'
+            ])
+            ->orderByDesc('total_revenue')
+            ->limit(10)
+            ->get();
+    }
+
+    private function getGenrePerformance($request, $startDate, $endDate)
+    {
+        $genreData = Book::select('genre')
+            ->selectRaw('SUM(wallet_transactions.amount) as revenue')
+            ->leftJoin('wallet_transactions', function($join) use ($startDate, $endDate) {
+                $join->on('books.id', '=', 'wallet_transactions.book_id')
+                     ->where('wallet_transactions.type', '=', 'sale')
+                     ->whereBetween('wallet_transactions.created_at', [$startDate, $endDate]);
+            })
+            ->groupBy('genre')
+            ->orderByDesc('revenue')
+            ->get();
 
         return [
-            'stats' => [
-                'total_users' => $totalUsers,
-                'total_authors' => $totalAuthors,
-                'total_books' => $totalBooks,
-                'pending_books' => $pendingBooks,
-                'published_books' => $publishedBooks,
-                'rejected_books' => $rejectedBooks,
-                'total_payouts' => $totalPayouts,
-                'pending_payouts' => $pendingPayouts,
-                'approved_payouts' => $approvedPayouts,
-                'total_payout_amount' => $totalPayoutAmount,
-                'pending_payout_amount' => $pendingPayoutAmount,
-                'total_revenue' => $totalRevenue,
-                'this_month_revenue' => $thisMonthRevenue,
-                'last_month_revenue' => $lastMonthRevenue,
-                'revenue_growth' => $revenueGrowth,
-            ],
-            'recent' => [
-                'books' => $recentBooks,
-                'payouts' => $recentPayouts,
-                'users' => $recentUsers,
-            ],
-            'charts' => [
-                'monthly_data' => $monthlyData,
-            ],
-            'top_performers' => [
-                'books' => $topBooks,
-                'authors' => $topAuthors,
-            ]
+            'labels' => $genreData->pluck('genre')->toArray(),
+            'data' => $genreData->pluck('revenue')->toArray(),
         ];
+    }
+
+    private function getRecentTransactions($startDate, $endDate)
+    {
+        return WalletTransaction::with(['book', 'user'])
+            ->where('type', 'sale')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->latest()
+            ->limit(10)
+            ->get();
+    }
+
+    private function getSalesMetrics($startDate, $endDate)
+    {
+        $totalRevenue = WalletTransaction::where('type', 'sale')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('amount');
+
+        $totalSales = WalletTransaction::where('type', 'sale')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        $avgOrderValue = $totalSales > 0 ? $totalRevenue / $totalSales : 0;
+        $platformCommission = $totalRevenue * 0.15; // 15% commission
+
+        return [
+            'total_revenue' => $totalRevenue,
+            'total_sales' => $totalSales,
+            'avg_order_value' => $avgOrderValue,
+            'platform_commission' => $platformCommission,
+        ];
+    }
+
+    private function calculatePercentageChange($previous, $current)
+    {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
+        }
+        return (($current - $previous) / $previous) * 100;
+    }
+
+    private function getSalesChartData($startDate, $endDate)
+    {
+        $days = [];
+        $revenue = [];
+        
+        $currentDate = $startDate->copy();
+        while ($currentDate->lte($endDate)) {
+            $dayRevenue = WalletTransaction::where('type', 'sale')
+                ->whereDate('created_at', $currentDate)
+                ->sum('amount');
+            
+            $days[] = $currentDate->format('M d');
+            $revenue[] = $dayRevenue;
+            
+            $currentDate->addDay();
+        }
+
+        return [
+            'labels' => $days,
+            'revenue' => $revenue,
+        ];
+    }
+
+    private function getAnalyticsChartData($startDate, $endDate)
+    {
+        $days = [];
+        $users = [];
+        $authors = [];
+        $books = [];
+        
+        $currentDate = $startDate->copy();
+        while ($currentDate->lte($endDate)) {
+            $dayUsers = User::whereDate('created_at', $currentDate)->count();
+            $dayAuthors = User::role('author')->whereDate('created_at', $currentDate)->count();
+            $dayBooks = Book::whereDate('created_at', $currentDate)->count();
+            
+            $days[] = $currentDate->format('M d');
+            $users[] = $dayUsers;
+            $authors[] = $dayAuthors;
+            $books[] = $dayBooks;
+            
+            $currentDate->addDay();
+        }
+
+        return [
+            'labels' => $days,
+            'users' => $users,
+            'authors' => $authors,
+            'books' => $books,
+        ];
+    }
+
+    public function userActivity()
+    {
+        return view('admin.user-activity');
+    }
+
+    // Test method for SweetAlert messages
+    public function testSweetAlert(Request $request)
+    {
+        $type = $request->query('type', 'success');
+        
+        switch ($type) {
+            case 'error':
+                return redirect()->route('admin.dashboard')->with('error', 'This is a test error message!');
+            case 'warning':
+                return redirect()->route('admin.dashboard')->with('warning', 'This is a test warning message!');
+            case 'info':
+                return redirect()->route('admin.dashboard')->with('info', 'This is a test info message!');
+            default:
+                return redirect()->route('admin.dashboard')->with('success', 'This is a test success message!');
+        }
     }
 }

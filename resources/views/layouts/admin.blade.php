@@ -18,6 +18,38 @@
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert2 Custom Styles */
+        .swal2-popup {
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .swal2-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .swal2-content {
+            font-size: 1rem;
+        }
+        
+        .swal2-success {
+            border-color: #20d08c;
+        }
+        
+        .swal2-error {
+            border-color: #e85347;
+        }
+        
+        .swal2-warning {
+            border-color: #f4bd0e;
+        }
+        
+        .swal2-info {
+            border-color: #099fff;
+        }
+    </style>
 </head>
 
 <body class="nk-body bg-lighter npc-general has-sidebar ">
@@ -46,11 +78,25 @@
                                 <li class="nk-menu-heading">
                                     <h6 class="overline-title text-primary-alt">Admin Panel</h6>
                                 </li><!-- .nk-menu-item -->
-                                <li class="nk-menu-item">
-                                    <a href="{{ route('admin.dashboard') }}" class="nk-menu-link">
+                                <li class="nk-menu-item has-sub">
+                                    <a href="{{ route('admin.unified-dashboard') }}" class="nk-menu-link ">
                                         <span class="nk-menu-icon"><em class="icon ni ni-dashboard-fill"></em></span>
-                                        <span class="nk-menu-text">Dashboard</span>
+                                        <span class="nk-menu-text">Dashboards</span>
                                     </a>
+                                    {{-- <ul class="nk-menu-sub">
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.dashboard') }}" class="nk-menu-link"><span class="nk-menu-text">Main Dashboard</span></a>
+                                        </li>
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.reports.sales') }}" class="nk-menu-link"><span class="nk-menu-text">Sales Reports</span></a>
+                                        </li>
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.reports.analytics') }}" class="nk-menu-link"><span class="nk-menu-text">Analytics</span></a>
+                                        </li>
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.unified-dashboard') }}" class="nk-menu-link"><span class="nk-menu-text">Unified Dashboard</span></a>
+                                        </li>
+                                    </ul> --}}
                                 </li><!-- .nk-menu-item -->
                                 
                                 <li class="nk-menu-heading">
@@ -68,6 +114,9 @@
                                         </li>
                                         <li class="nk-menu-item">
                                             <a href="{{ route('admin.users.authors') }}" class="nk-menu-link"><span class="nk-menu-text">Authors</span></a>
+                                        </li>
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.users.trashed') }}" class="nk-menu-link"><span class="nk-menu-text">Trashed Users</span></a>
                                         </li>
                                         <li class="nk-menu-item">
                                             <a href="{{ route('admin.users.create') }}" class="nk-menu-link"><span class="nk-menu-text">Add User</span></a>
@@ -111,48 +160,48 @@
                                     </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->
                                 
-                                <li class="nk-menu-heading">
+                                {{-- <li class="nk-menu-heading">
                                     <h6 class="overline-title text-primary-alt">Analytics</h6>
-                                </li><!-- .nk-menu-heading -->
+                                </li>
                                 
                                 <li class="nk-menu-item">
                                     <a href="{{ route('admin.reports.sales') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-growth-fill"></em></span>
                                         <span class="nk-menu-text">Sales Reports</span>
                                     </a>
-                                </li><!-- .nk-menu-item -->
+                                </li>
                                 
                                 <li class="nk-menu-item">
                                     <a href="{{ route('admin.reports.analytics') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-bar-chart-fill"></em></span>
                                         <span class="nk-menu-text">Analytics</span>
                                     </a>
-                                </li><!-- .nk-menu-item -->
+                                </li>
                                 
                                 <li class="nk-menu-item">
                                     <a href="{{ route('admin.users.activity') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-activity-alt"></em></span>
                                         <span class="nk-menu-text">User Activities</span>
                                     </a>
-                                </li><!-- .nk-menu-item -->
+                                </li> --}}
                                 
-                                <li class="nk-menu-heading">
+                                {{-- <li class="nk-menu-heading">
                                     <h6 class="overline-title text-primary-alt">System</h6>
-                                </li><!-- .nk-menu-heading -->
+                                </li>
                                 
                                 <li class="nk-menu-item">
                                     <a href="{{ route('admin.settings') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-setting-fill"></em></span>
                                         <span class="nk-menu-text">Settings</span>
                                     </a>
-                                </li><!-- .nk-menu-item -->
+                                </li>
                                 
                                 <li class="nk-menu-item">
                                     <a href="{{ route('admin.notifications.index') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-bell-fill"></em></span>
                                         <span class="nk-menu-text">Notifications</span>
                                     </a>
-                                </li><!-- .nk-menu-item -->
+                                </li> --}}
                             </ul><!-- .nk-menu -->
                         </div><!-- .nk-sidebar-menu -->
                     </div><!-- .nk-sidebar-content -->
@@ -256,7 +305,7 @@
                                             <div class="dropdown-inner">
                                                 <ul class="link-list">
                                                     <li><a href="{{ route('admin.profile.index') }}"><em class="icon ni ni-user-alt"></em><span>View Profile</span></a></li>
-                                                    <li><a href="{{ route('admin.settings') }}"><em class="icon ni ni-setting-alt"></em><span>Account Settings</span></a></li>
+                                                    {{-- <li><a href="{{ route('admin.settings') }}"><em class="icon ni ni-setting-alt"></em><span>Account Settings</span></a></li> --}}
                                                     <li><a href="#" id="loginActivityLink"><em class="icon ni ni-activity-alt"></em><span>Login Activity</span></a></li>
                                                     <li><a href="#" id="darkModeToggleProfile"><em class="icon ni ni-moon"></em><span>Dark Mode</span></a></li>
                                                     @if(auth()->user()->hasRole('author'))
@@ -331,6 +380,133 @@
     
     <!-- Notifications Script -->
     <script src="{{ asset('js/notifications.js') }}"></script>
+    
+    <!-- Admin Custom Script -->
+    <script src="{{ asset('js/admin.js') }}"></script>
+    
+    <!-- SweetAlert2 Initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Display success message if session has 'success' key
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: '{{ session('success') }}',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            @endif
+
+            // Display error message if session has 'error' key
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: '{{ session('error') }}',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#e85347'
+                });
+            @endif
+
+            // Display warning message if session has 'warning' key
+            @if(session('warning'))
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning!',
+                    text: '{{ session('warning') }}',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#f4bd0e'
+                });
+            @endif
+
+            // Display info message if session has 'info' key
+            @if(session('info'))
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: '{{ session('info') }}',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            @endif
+            
+            // Global function to show SweetAlert messages
+            window.showSuccessMessage = function(message) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: message,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            };
+            
+            window.showErrorMessage = function(message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: message,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#e85347'
+                });
+            };
+            
+            window.showWarningMessage = function(message) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning!',
+                    text: message,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#f4bd0e'
+                });
+            };
+            
+            window.showInfoMessage = function(message) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: message,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            };
+            
+            // Confirm dialog function
+            window.confirmAction = function(message, callback) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e85347',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, proceed!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        callback();
+                    }
+                });
+            };
+        });
+    </script>
     
     @stack('scripts')
 </body>

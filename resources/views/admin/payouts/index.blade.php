@@ -18,7 +18,7 @@
                             <p>Review, approve, and manage author payout requests.</p>
                         </div>
                     </div>
-                    <div class="nk-block-head-content">
+                    {{-- <div class="nk-block-head-content">
                         <div class="toggle-wrap nk-block-tools-toggle">
                             <a href="#" class="btn btn-icon btn-trigger toggle-expand me-n1" data-target="pageMenu"><em class="icon ni ni-more-v"></em></a>
                             <div class="toggle-expand-content" data-content="pageMenu">
@@ -28,7 +28,7 @@
                                 </ul>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
 
@@ -47,7 +47,7 @@
                             </div>
                             <div class="card-amount">
                                 <span class="amount">{{ number_format($stats['total_payouts']) }}</span>
-                                <span class="sub-title">${{ number_format($stats['total_amount_requested'], 2) }} requested</span>
+                                <span class="sub-title">₦{{ number_format($stats['total_amount_requested'], 2) }} requested</span>
                             </div>
                         </div>
                     </div>
@@ -65,7 +65,7 @@
                             </div>
                             <div class="card-amount">
                                 <span class="amount">{{ number_format($stats['pending_payouts']) }}</span>
-                                <span class="sub-title">${{ number_format($stats['pending_amount'], 2) }}</span>
+                                <span class="sub-title">₦{{ number_format($stats['pending_amount'], 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -83,7 +83,7 @@
                             </div>
                             <div class="card-amount">
                                 <span class="amount">{{ number_format($stats['approved_payouts']) }}</span>
-                                <span class="sub-title">${{ number_format($stats['approved_amount'], 2) }}</span>
+                                <span class="sub-title">₦{{ number_format($stats['approved_amount'], 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -148,12 +148,12 @@
                         <div class="card-inner p-0">
                             <div class="nk-tb-list nk-tb-ulist">
                                 <div class="nk-tb-item nk-tb-head">
-                                    <div class="nk-tb-col nk-tb-col-check">
+                                    {{-- <div class="nk-tb-col nk-tb-col-check">
                                         <div class="custom-control custom-control-sm custom-checkbox notext">
                                             <input type="checkbox" class="custom-control-input" id="uid-all">
                                             <label class="custom-control-label" for="uid-all"></label>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <div class="nk-tb-col"><span class="sub-text">Author</span></div>
                                     <div class="nk-tb-col tb-col-mb"><span class="sub-text">Amount</span></div>
                                     <div class="nk-tb-col tb-col-md"><span class="sub-text">Status</span></div>
@@ -174,12 +174,12 @@
 
                                 @forelse($payouts as $payout)
                                     <div class="nk-tb-item">
-                                        <div class="nk-tb-col nk-tb-col-check">
+                                        {{-- <div class="nk-tb-col nk-tb-col-check">
                                             <div class="custom-control custom-control-sm custom-checkbox notext">
                                                 <input type="checkbox" class="custom-control-input payout-checkbox" id="uid{{ $payout->id }}" value="{{ $payout->id }}">
                                                 <label class="custom-control-label" for="uid{{ $payout->id }}"></label>
                                             </div>
-                                        </div>
+                                        </div> --}}
                                         <div class="nk-tb-col">
                                             <div class="user-card">
                                                 <div class="user-avatar bg-primary-dim">
@@ -192,7 +192,7 @@
                                             </div>
                                         </div>
                                         <div class="nk-tb-col tb-col-mb">
-                                            <span class="tb-lead">${{ number_format($payout->amount_requested, 2) }}</span>
+                                            <span class="tb-lead">₦{{ number_format($payout->amount_requested, 2) }}</span>
                                             <span class="tb-sub">Requested</span>
                                         </div>
                                         <div class="nk-tb-col tb-col-md">
@@ -431,7 +431,7 @@ function viewPayout(payoutId, event) {
             document.getElementById('viewAuthorInitials').textContent = payout.user.name.substring(0, 2).toUpperCase();
             document.getElementById('viewAuthorName').textContent = payout.user.name;
             document.getElementById('viewAuthorEmail').textContent = payout.user.email;
-            document.getElementById('viewAmount').value = '$' + parseFloat(payout.amount_requested).toFixed(2);
+            document.getElementById('viewAmount').value = '₦' + parseFloat(payout.amount_requested).toFixed(2);
             
             // Set status badge
             const statusElement = document.getElementById('viewStatus');
@@ -506,7 +506,7 @@ function openReviewModal(payoutId, action, event) {
             document.getElementById('reviewAction').value = action;
             
             // Populate review modal
-            document.getElementById('reviewAmount').value = '$' + parseFloat(payout.amount_requested).toFixed(2);
+            document.getElementById('reviewAmount').value = '₦' + parseFloat(payout.amount_requested).toFixed(2);
             document.getElementById('reviewAuthorInitials').textContent = payout.user.name.substring(0, 2).toUpperCase();
             document.getElementById('reviewAuthorName').textContent = payout.user.name;
             document.getElementById('reviewAuthorEmail').textContent = payout.user.email;

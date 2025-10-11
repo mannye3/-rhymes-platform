@@ -41,13 +41,13 @@ class PayoutStatusChanged extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $subject = 'Payout Request Update - $' . number_format($this->payout->amount_requested, 2);
+        $subject = 'Payout Request Update - ₦' . number_format($this->payout->amount_requested, 2);
         $greeting = 'Hello ' . $notifiable->name . ',';
         
         $message = (new MailMessage)
             ->subject($subject)
             ->greeting($greeting)
-            ->line('Your payout request of $' . number_format($this->payout->amount_requested, 2) . ' has been updated.');
+            ->line('Your payout request of ₦' . number_format($this->payout->amount_requested, 2) . ' has been updated.');
 
         switch ($this->newStatus) {
             case 'approved':
@@ -64,7 +64,7 @@ class PayoutStatusChanged extends Notification implements ShouldQueue
                 break;
             case 'completed':
                 $message->line('🎉 Your payout has been completed!')
-                        ->line('The payment of $' . number_format($this->payout->amount_requested, 2) . ' has been sent.')
+                        ->line('The payment of ₦' . number_format($this->payout->amount_requested, 2) . ' has been sent.')
                         ->line('Please check your payment method for the funds.')
                         ->action('View Wallet', route('author.wallet.index'));
                 break;
@@ -93,7 +93,7 @@ class PayoutStatusChanged extends Notification implements ShouldQueue
 
     private function getStatusMessage()
     {
-        $amount = '$' . number_format($this->payout->amount_requested, 2);
+        $amount = '₦' . number_format($this->payout->amount_requested, 2);
         
         switch ($this->newStatus) {
             case 'approved':

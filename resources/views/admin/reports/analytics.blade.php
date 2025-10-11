@@ -34,6 +34,7 @@
                                         </div>
                                     </li>
                                     <li><a href="#" class="btn btn-primary" onclick="refreshData()"><em class="icon ni ni-reload"></em><span>Refresh</span></a></li>
+                                    <li><a href="{{ route('admin.unified-dashboard') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-dashboard"></em><span>Unified Dashboard</span></a></li>
                                 </ul>
                             </div>
                         </div>

@@ -65,9 +65,9 @@
                                                            max="{{ $availableBalance }}"
                                                            value="{{ old('amount_requested') }}">
                                                     <div class="form-note">
-                                                        Minimum: $10.00 | Available: ${{ number_format($availableBalance, 2) }}
+                                                        Minimum: ₦10.00 | Available: ₦{{ number_format($availableBalance, 2) }}
                                                         @if($payoutStats['pending_amount'] > 0)
-                                                            <br><small class="text-warning">(${{ number_format($payoutStats['pending_amount'], 2) }} pending in other requests)</small>
+                                                            <br><small class="text-warning">(₦{{ number_format($payoutStats['pending_amount'], 2) }} pending in other requests)</small>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -82,9 +82,9 @@
                                                 @if($availableBalance < 10)
                                                     <div class="form-note text-danger mt-2">
                                                         @if($payoutStats['pending_amount'] > 0)
-                                                            Insufficient available balance. You have ${{ number_format($payoutStats['pending_amount'], 2) }} in pending payouts.
+                                                            Insufficient available balance. You have ₦{{ number_format($payoutStats['pending_amount'], 2) }} in pending payouts.
                                                         @else
-                                                            Minimum balance of $10.00 required for payout
+                                                            Minimum balance of ₦10.00 required for payout
                                                         @endif
                                                     </div>
                                                 @endif
@@ -108,13 +108,13 @@
                                     </div>
                                 </div>
                                 <div class="card-amount">
-                                    <span class="amount">${{ number_format($availableBalance, 2) }}</span>
+                                    <span class="amount">₦{{ number_format($availableBalance, 2) }}</span>
                                 </div>
                                 <div class="card-note">
                                     <span class="text-soft">Ready for withdrawal</span>
                                     @if($payoutStats['pending_amount'] > 0)
-                                        <br><small class="text-warning">Total Balance: ${{ number_format($walletBalance, 2) }}</small>
-                                        <br><small class="text-warning">Pending: ${{ number_format($payoutStats['pending_amount'], 2) }}</small>
+                                        <br><small class="text-warning">Total Balance: ₦{{ number_format($walletBalance, 2) }}</small>
+                                        <br><small class="text-warning">Pending: ₦{{ number_format($payoutStats['pending_amount'], 2) }}</small>
                                     @endif
                                 </div>
                             </div>
@@ -126,7 +126,7 @@
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                         <span>Minimum Payout</span>
-                                        <strong>$10.00</strong>
+                                        <strong>₦10.00</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                         <span>Processing Time</span>
@@ -195,7 +195,7 @@
                                         <span class="tb-sub">{{ $payout->created_at->format('H:i') }}</span>
                                     </div>
                                     <div class="nk-tb-col tb-col-md">
-                                        <span class="tb-amount">${{ number_format($payout->amount_requested, 2) }}</span>
+                                        <span class="tb-amount">₦{{ number_format($payout->amount_requested, 2) }}</span>
                                     </div>
                                     <div class="nk-tb-col tb-col-lg">
                                         <span class="tb-status text-{{ $payout->status === 'approved' ? 'success' : ($payout->status === 'denied' ? 'danger' : 'warning') }}">
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'warning',
                 title: 'Invalid Amount',
-                text: 'Minimum payout amount is $10.00',
+                text: 'Minimum payout amount is ₦10.00',
                 confirmButtonText: 'OK'
             });
             return;
@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'warning',
                 title: 'Insufficient Balance',
-                text: `Payout amount cannot exceed your available balance of $${maxAmount.toFixed(2)}`,
+                text: `Payout amount cannot exceed your available balance of ₦${maxAmount.toFixed(2)}`,
                 confirmButtonText: 'OK'
             });
             return;
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Confirm payout request with SweetAlert
         Swal.fire({
             title: 'Confirm Payout Request',
-            text: `Are you sure you want to request a payout of $${amount.toFixed(2)}?`,
+            text: `Are you sure you want to request a payout of ₦${amount.toFixed(2)}?`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',

@@ -25,15 +25,18 @@
                             <a href="#" class="btn btn-icon btn-trigger toggle-expand me-n1" data-target="pageMenu"><em class="icon ni ni-more-v"></em></a>
                             <div class="toggle-expand-content" data-content="pageMenu">
                                 <ul class="nk-block-tools g-3">
-                                    <li><a href="" class="btn btn-primary"><em class="icon ni ni-eye"></em><span>Review Books</span></a></li>
-                                    <li><a href="" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-tranx"></em><span>Manage Payouts</span></a></li>
-                                    <li><a href="" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-reports"></em><span>View Reports</span></a></li>
+                                    <li><a href="{{ route('admin.books.index') }}" class="btn btn-primary"><em class="icon ni ni-eye"></em><span>Review Books</span></a></li>
+                                    <li><a href="{{ route('admin.payouts.index') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-tranx"></em><span>Manage Payouts</span></a></li>
+                                    <li><a href="{{ route('admin.unified-dashboard') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-dashboard"></em><span>Unified Dashboard</span></a></li>
                                 </ul>
                             </div>
                         </div>
                     </div><!-- .nk-block-head-content -->
                 </div><!-- .nk-block-between -->
             </div><!-- .nk-block-head -->
+            
+            <!-- SweetAlert Test Buttons -->
+         
             
             <div class="nk-block">
                 <!-- Overview Stats Cards -->
@@ -68,7 +71,7 @@
                                     </div>
                                 </div>
                                 <div class="card-amount">
-                                    <span class="amount">${{ number_format($analytics['stats']['total_revenue'], 2) }}</span>
+                                    <span class="amount">₦{{ number_format($analytics['stats']['total_revenue'], 2) }}</span>
                                     @if($analytics['stats']['revenue_growth'] > 0)
                                         <span class="sub-title text-success"><em class="icon ni ni-arrow-long-up"></em>{{ number_format($analytics['stats']['revenue_growth'], 1) }}% this month</span>
                                     @elseif($analytics['stats']['revenue_growth'] < 0)
@@ -133,7 +136,7 @@
                                 </div>
                                 <div class="card-amount">
                                     <span class="amount">{{ number_format($analytics['stats']['pending_payouts']) }}</span>
-                                    <span class="sub-title">${{ number_format($analytics['stats']['pending_payout_amount'], 2) }} pending</span>
+                                    <span class="sub-title">₦{{ number_format($analytics['stats']['pending_payout_amount'], 2) }} pending</span>
                                 </div>
                             </div>
                         </div>
@@ -150,8 +153,8 @@
                                     </div>
                                 </div>
                                 <div class="card-amount">
-                                    <span class="amount">${{ number_format($analytics['stats']['this_month_revenue'], 2) }}</span>
-                                    <span class="sub-title">vs ${{ number_format($analytics['stats']['last_month_revenue'], 2) }} last month</span>
+                                    <span class="amount">₦{{ number_format($analytics['stats']['this_month_revenue'], 2) }}</span>
+                                    <span class="sub-title">vs ₦{{ number_format($analytics['stats']['last_month_revenue'], 2) }} last month</span>
                                 </div>
                             </div>
                         </div>
@@ -168,7 +171,7 @@
                                     </div>
                                 </div>
                                 <div class="card-amount">
-                                    <span class="amount">${{ number_format($analytics['stats']['total_payout_amount'], 2) }}</span>
+                                    <span class="amount">₦{{ number_format($analytics['stats']['total_payout_amount'], 2) }}</span>
                                     <span class="sub-title">{{ number_format($analytics['stats']['approved_payouts']) }} completed</span>
                                 </div>
                             </div>
@@ -186,9 +189,9 @@
                                         <h6 class="title">Recent Book Submissions</h6>
                                         <p>Latest books submitted for review</p>
                                     </div>
-                                    <div class="card-tools">
-                                        <a href="" class="link">Review All</a>
-                                    </div>
+                                    {{-- <div class="card-tools">
+                                        <a href="#" class="link">Review All</a>
+                                    </div> --}}
                                 </div>
                                 @if(count($analytics['recent']['books']) > 0)
                                     <div class="nk-tb-list nk-tb-orders">
@@ -222,9 +225,9 @@
                                                 </div>
                                                 <div class="nk-tb-col">
                                                     @if($book->status === 'pending')
-                                                        <a href="" class="btn btn-sm btn-primary">Review</a>
+                                                        <a href="#" class="btn btn-sm btn-primary">Review</a>
                                                     @else
-                                                        <a href="" class="btn btn-sm btn-outline-light">View</a>
+                                                        <a href="#" class="btn btn-sm btn-outline-light">View</a>
                                                     @endif
                                                 </div>
                                             </div>
@@ -249,9 +252,9 @@
                                         <h6 class="title">Recent Activity</h6>
                                         <p>Latest platform activity</p>
                                     </div>
-                                    <div class="card-tools">
-                                        <a href="" class="link">View All</a>
-                                    </div>
+                                    {{-- <div class="card-tools">
+                                        <a href="#" class="link">View All</a>
+                                    </div> --}}
                                 </div>
                                 
                                 @if(count($analytics['recent']['users']) > 0 || count($analytics['recent']['payouts']) > 0)
@@ -274,7 +277,7 @@
                                                     <em class="icon ni ni-tranx"></em>
                                                 </div>
                                                 <div class="nk-activity-data">
-                                                    <div class="label">Payout request ${{ number_format($payout->amount_requested, 2) }} from {{ $payout->user->name }}</div>
+                                                    <div class="label">Payout request ₦{{ number_format($payout->amount_requested, 2) }} from {{ $payout->user->name }}</div>
                                                     <span class="time">{{ $payout->created_at->diffForHumans() }}</span>
                                                 </div>
                                             </li>

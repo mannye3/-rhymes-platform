@@ -60,7 +60,7 @@
                                     <div class="col-lg-6">
                                         <div class="form-group">
                                             <label class="form-label">Amount Requested</label>
-                                            <div class="form-control-plaintext h4 text-primary">${{ number_format($payout->amount_requested, 2) }}</div>
+                                            <div class="form-control-plaintext h4 text-primary">₦{{ number_format($payout->amount_requested, 2) }}</div>
                                         </div>
                                     </div>
                                     <div class="col-lg-6">
@@ -131,7 +131,7 @@
                                                 </div>
                                                 <div class="inbox-item-body">
                                                     <p class="inbox-item-text">Total Earnings</p>
-                                                    <h4 class="inbox-item-title">${{ number_format($userStats['total_earnings'], 2) }}</h4>
+                                                    <h4 class="inbox-item-title">₦{{ number_format($userStats['total_earnings'], 2) }}</h4>
                                                 </div>
                                             </div>
                                         </div>
@@ -146,7 +146,7 @@
                                                 </div>
                                                 <div class="inbox-item-body">
                                                     <p class="inbox-item-text">Total Payouts</p>
-                                                    <h4 class="inbox-item-title">${{ number_format($userStats['total_payouts'], 2) }}</h4>
+                                                    <h4 class="inbox-item-title">₦{{ number_format($userStats['total_payouts'], 2) }}</h4>
                                                 </div>
                                             </div>
                                         </div>
@@ -161,7 +161,7 @@
                                                 </div>
                                                 <div class="inbox-item-body">
                                                     <p class="inbox-item-text">Pending Payouts</p>
-                                                    <h4 class="inbox-item-title">${{ number_format($userStats['pending_payouts'], 2) }}</h4>
+                                                    <h4 class="inbox-item-title">₦{{ number_format($userStats['pending_payouts'], 2) }}</h4>
                                                 </div>
                                             </div>
                                         </div>
@@ -176,7 +176,7 @@
                                                 </div>
                                                 <div class="inbox-item-body">
                                                     <p class="inbox-item-text">Available Balance</p>
-                                                    <h4 class="inbox-item-title">${{ number_format($userStats['available_balance'], 2) }}</h4>
+                                                    <h4 class="inbox-item-title">₦{{ number_format($userStats['available_balance'], 2) }}</h4>
                                                 </div>
                                             </div>
                                         </div>
@@ -205,7 +205,7 @@
                                                     <span class="tb-lead">{{ $bookSales }}</span>
                                                 </div>
                                                 <div class="nk-tb-col tb-col-lg">
-                                                    <span class="tb-lead">${{ number_format($bookRevenue, 2) }}</span>
+                                                    <span class="tb-lead">₦{{ number_format($bookRevenue, 2) }}</span>
                                                 </div>
                                                 <div class="nk-tb-col">
                                                     @if($book->status === 'accepted')

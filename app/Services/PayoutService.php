@@ -43,14 +43,14 @@ class PayoutService
         if ($data['amount_requested'] > $availableBalance) {
             $pendingPayouts = $this->getPendingPayoutsSum($user->id);
             throw ValidationException::withMessages([
-                'amount_requested' => 'Insufficient balance. You have $' . number_format($pendingPayouts, 2) . ' in pending payouts.'
+                'amount_requested' => 'Insufficient balance. You have ₦' . number_format($pendingPayouts, 2) . ' in pending payouts.'
             ]);
         }
 
         // Validate minimum amount
         if ($data['amount_requested'] < 10) {
             throw ValidationException::withMessages([
-                'amount_requested' => 'Minimum payout amount is $10.00'
+                'amount_requested' => 'Minimum payout amount is ₦10.00'
             ]);
         }
 

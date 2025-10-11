@@ -25,6 +25,7 @@
                                 <ul class="nk-block-tools g-3">
                                     <li><a href="#" class="btn btn-primary" onclick="exportReport('pdf')"><em class="icon ni ni-file-pdf"></em><span>Export PDF</span></a></li>
                                     <li><a href="#" class="btn btn-white btn-dim btn-outline-light" onclick="exportReport('excel')"><em class="icon ni ni-file-xls"></em><span>Export Excel</span></a></li>
+                                    <li><a href="{{ route('admin.unified-dashboard') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-dashboard"></em><span>Unified Dashboard</span></a></li>
                                 </ul>
                             </div>
                         </div>

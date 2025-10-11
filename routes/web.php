@@ -1,35 +1,74 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController as UserDashboardController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Author\AuthorController;
 use App\Http\Controllers\Author\BookController;
 use App\Http\Controllers\Author\WalletController;
 use App\Http\Controllers\Author\PayoutController;
-use App\Http\Controllers\Admin\BookReviewController;
-use App\Http\Controllers\Admin\PayoutManagementController;
-use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\ReportsController;
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
-use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Author\AuthorController;
 use App\Http\Controllers\Author\AuthorProfileController;
 use App\Http\Controllers\User\BookSubmissionController;
-use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\Admin\BookReviewController;
+use App\Http\Controllers\Admin\PayoutManagementController;
+use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\ProfileController;
 
+// Test route for user update
+Route::get('/test-update', function () {
+    $user = \App\Models\User::first();
+    if ($user) {
+        $userService = new \App\Services\UserService();
+        $data = [
+            'name' => 'Test User Updated',
+            'email' => $user->email,
+            'phone' => '1234567890',
+            'website' => 'https://example.com',
+            'bio' => 'This is a test bio',
+            'email_verified' => true
+        ];
+        
+        try {
+            $updatedUser = $userService->updateUser($user, $data);
+            return response()->json(['success' => true, 'user' => $updatedUser]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+    return response()->json(['success' => false, 'error' => 'No user found']);
+});
 
-Route::get('/run-seeder', function () {
+// Test route for user creation
+Route::get('/test-create', function () {
     try {
-        Artisan::call('db:seed', ['--force' => true]);
-        return '✅ Database seeding completed successfully!';
-    } catch (Exception $e) {
-        return '❌ Error: ' . $e->getMessage();
+        // Create a role if it doesn't exist
+        $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'author']);
+        
+        $userService = new \App\Services\UserService();
+        $data = [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password123',
+            'role' => 'author',
+            'phone' => '1234567890',
+            'website' => 'https://example.com',
+            'bio' => 'This is a test bio'
+        ];
+        
+        $user = $userService->createUser($data);
+        return response()->json(['success' => true, 'user' => $user]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'error' => $e->getMessage()]);
     }
 });
 
+// Test SweetAlert messages
+Route::get('/test/sweetalert', [AdminController::class, 'testSweetAlert'])->middleware('auth');
 
 // Test route for payment form submission (only in local environment)
 if (app()->environment('local')) {
@@ -48,7 +87,7 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Notifications
     Route::get('/notifications/unread', [NotificationController::class, 'unread'])->name('notifications.unread');
@@ -87,12 +126,14 @@ Route::middleware('auth')->group(function () {
     // Admin routes
     Route::middleware('role:admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
-            // Dashboard
+            // Dashboards
             Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+            Route::get('/unified', [AdminController::class, 'unifiedDashboard'])->name('unified-dashboard');
             
             // User Management
             Route::get('users/activity', [AdminController::class, 'userActivity'])->name('users.activity');
             Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
+            Route::get('users/trashed', [UserManagementController::class, 'trashed'])->name('users.trashed');
             Route::get('users/authors', [UserManagementController::class, 'authors'])->name('users.authors');
             Route::get('users/create', [UserManagementController::class, 'create'])->name('users.create');
             Route::post('users', [UserManagementController::class, 'store'])->name('users.store');
@@ -100,6 +141,7 @@ Route::middleware('auth')->group(function () {
             Route::get('users/{user}/edit', [UserManagementController::class, 'edit'])->name('users.edit');
             Route::put('users/{user}', [UserManagementController::class, 'update'])->name('users.update');
             Route::delete('users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+            Route::post('users/{user}/restore', [UserManagementController::class, 'restore'])->name('users.restore');
             Route::post('users/{user}/promote-author', [UserManagementController::class, 'promoteToAuthor'])->name('users.promote-author');
             Route::post('users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
             Route::post('users/{user}/send-verification', [UserManagementController::class, 'sendVerificationEmail'])->name('users.send-verification');

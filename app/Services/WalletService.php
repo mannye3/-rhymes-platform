@@ -69,7 +69,7 @@ class WalletService
                 'date' => $transaction->created_at->format('Y-m-d H:i:s'),
                 'type' => ucfirst($transaction->type),
                 'book' => $transaction->book ? $transaction->book->title : 'N/A',
-                'amount' => '$' . number_format($transaction->amount, 2),
+                'amount' => '₦' . number_format($transaction->amount, 2),
                 'description' => $transaction->meta['description'] ?? ''
             ];
         }

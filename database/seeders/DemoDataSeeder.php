@@ -218,7 +218,7 @@ class DemoDataSeeder extends Seeder
         foreach ($authors as $author) {
             $balance = $author->getWalletBalance();
             
-            // Only create payouts for authors with balance > $20
+            // Only create payouts for authors with balance > ₦20
             if ($balance > 20) {
                 // Create 1-2 payouts per eligible author
                 $payoutCount = rand(1, 2);
