@@ -13,8 +13,8 @@
     <!-- Page Title  -->
     <title>@yield('title', 'Rhymes Author Platform')</title>
     <!-- StyleSheets  -->
-    <link rel="stylesheet" href="./assets/css/dashlite.css?ver=3.2.3">
-    <link id="skin-default" rel="stylesheet" href="./assets/css/theme.css?ver=3.2.3">
+    <link rel="stylesheet" href="{{asset('/assets/css/dashlite.css')}}">
+    <link id="skin-default" rel="stylesheet" href="{{asset('/assets/css/theme.css')}}">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 </head>
 
@@ -188,10 +188,10 @@
     <!-- app-root @e -->
     
     <!-- JavaScript -->
-    <script src="./assets/js/bundle.js?ver=3.2.3"></script>
-    <script src="./assets/js/scripts.js?ver=3.2.3"></script>
-    <script src="./assets/js/charts/gd-default.js?ver=3.2.3"></script>
-    <script src="./assets/js/libs/datatable-btns.js?ver=3.2.3"></script>
+    <script src="{{asset('/assets/js/bundle.js')}}"></script>
+    <script src="{{asset('/assets/js/scripts.js')}}"></script>
+    <script src="{{asset('/assets/js/charts/gd-default.js')}}"></script>
+    <script src="{{asset('/assets/js/libs/datatable-btns.js')}}"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
