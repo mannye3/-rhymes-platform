@@ -11,15 +11,15 @@
     <link rel="shortcut icon" href="./images/favicon.png">
     
     <!-- DashLite Styles -->
-    <link rel="stylesheet" href="./assets/css/dashlite.css?ver=3.2.3">
-    <link id="skin-default" rel="stylesheet" href="./assets/css/theme.css?ver=3.2.3">
+    <link rel="stylesheet" href="{{asset('/assets/css/dashlite.css')}}">
+    <link id="skin-default" rel="stylesheet" href="{{asset('/assets/css/theme.css')}}">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+   
 </head>
 <body class="nk-body bg-lighter npc-default has-sidebar">
     <div class="nk-app-root">
