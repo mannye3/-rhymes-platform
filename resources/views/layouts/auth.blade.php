@@ -16,8 +16,8 @@
     <title>@yield('title', 'Rhymes Author Platform')</title>
     
     <!-- StyleSheets -->
-    <link rel="stylesheet" href="./assets/css/dashlite.css?ver=3.2.3">
-    <link id="skin-default" rel="stylesheet" href="./assets/css/theme.css?ver=3.2.3">
+    <link rel="stylesheet" href="{{asset('/assets/css/dashlite.css')}}">
+    <link id="skin-default" rel="stylesheet" href="{{asset('/assets/css/theme.css')}}">
     
     @stack('styles')
 </head>
@@ -131,8 +131,8 @@
     <!-- app-root @e -->
 
     <!-- JavaScript -->
-    <script src="./assets/js/bundle.js?ver=3.2.3"></script>
-    <script src="./assets/js/scripts.js?ver=3.2.3"></script>
+    <script src="{{asset('/assets/js/bundle.js')}}"></script>
+    <script src="{{asset('/assets/js/scripts.js')}}"></script>
     
     @stack('scripts')
 </body>
