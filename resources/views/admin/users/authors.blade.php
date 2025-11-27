@@ -135,7 +135,7 @@
                                                             <ul class="link-list-opt no-bdr">
                                                                 <li><a href="{{ route('admin.users.show', $author) }}"><em class="icon ni ni-eye"></em><span>View Profile</span></a></li>
                                                                 <li><a href="{{ route('admin.users.edit', $author) }}"><em class="icon ni ni-edit"></em><span>Edit Author</span></a></li>
-                                                                <li><a href="{{ route('admin.books.index', ['author' => $author->id]) }}"><em class="icon ni ni-book"></em><span>View Books</span></a></li>
+                                                                <li><a href="{{ route('admin.admin.books.index', ['author' => $author->id]) }}"><em class="icon ni ni-book"></em><span>View Books</span></a></li>
                                                                 <li><a href="{{ route('admin.payouts.index', ['author' => $author->id]) }}"><em class="icon ni ni-tranx"></em><span>View Payouts</span></a></li>
                                                                 <li class="divider"></li>
                                                                 <li><a href="#" onclick="sendMessage({{ $author->id }})"><em class="icon ni ni-mail"></em><span>Send Message</span></a></li>

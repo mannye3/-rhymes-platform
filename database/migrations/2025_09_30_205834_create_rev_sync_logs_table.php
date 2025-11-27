@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('rev_sync_logs', function (Blueprint $table) {
             $table->id();
-            $table->enum('area', ['books', 'sales', 'inventory']);
+            $table->enum('area', ['books', 'sales', 'inventory', 'products']);
             $table->enum('status', ['success', 'error']);
             $table->text('message');
             $table->json('payload')->nullable(); // request/response data

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Book;
 use App\Services\Admin\BookReviewService;
 
@@ -62,84 +63,177 @@ class BookReviewController extends Controller
 
     public function review(Request $request, Book $book)
     {
-       
-
+        $admin = Auth::user();
+        
         // Log the incoming request data for debugging
-        Log::info('Book review request data:', [
+        Log::info('Book review process started', [
             'book_id' => $book->id,
+            'book_title' => $book->title,
+            'current_status' => $book->status,
             'request_data' => $request->all(),
-            'user_id' => auth()->id(),
-            'request_method' => $request->method(),
-            'content_type' => $request->header('Content-Type'),
-            'all_headers' => $request->headers->all(),
+            'admin_id' => $admin->id,
+            'admin_name' => $admin->name,
+            'timestamp' => now()->toISOString(),
         ]);
         
         // Log raw input
         $rawInput = file_get_contents('php://input');
-        Log::info('Raw input data:', [
+        Log::debug('Book review raw input data', [
+            'book_id' => $book->id,
             'raw_input' => $rawInput,
         ]);
         
-        $validated = $request->validate([
-            'status' => 'required|in:accepted,rejected,stocked',
-            'admin_notes' => 'nullable|string',
-            'rev_book_id' => 'nullable|string|unique:books,rev_book_id,' . $book->id . ',id',
-        ]);
-        
-        // Log the validated data
-        Log::info('Book review validated data:', $validated);
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:accepted,rejected,stocked',
+                'admin_notes' => 'nullable|string',
+                'rev_book_id' => 'nullable|string|unique:books,rev_book_id,' . $book->id . ',id',
+            ]);
+            
+            // Log the validated data
+            Log::info('Book review data validated successfully', [
+                'book_id' => $book->id,
+                'book_title' => $book->title,
+                'validated_data' => $validated,
+                'admin_id' => $admin->id,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Book review validation failed', [
+                'book_id' => $book->id,
+                'book_title' => $book->title,
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+                'admin_id' => $admin->id,
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Book review validation error', [
+                'book_id' => $book->id,
+                'book_title' => $book->title,
+                'exception' => $e->getMessage(),
+                'request_data' => $request->all(),
+                'admin_id' => $admin->id,
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error: ' . $e->getMessage()
+                ], 422);
+            }
+            return back()->with('error', 'Validation error: ' . $e->getMessage());
+        }
         
         try {
-            $updated = $this->bookReviewService->reviewBook($book, $validated, auth()->user());
+            $updated = $this->bookReviewService->reviewBook($book, $validated, $admin);
             
-            Log::info('Book review service result:', [
+            Log::info('Book review service completed', [
                 'book_id' => $book->id,
+                'book_title' => $book->title,
                 'updated' => $updated,
                 'new_status' => $validated['status'] ?? null,
+                'admin_id' => $admin->id,
+                'admin_name' => $admin->name,
             ]);
             
             if ($updated) {
+                // Check if this was an acceptance and if ERPREV registration failed
+                $erprevError = null;
+                if ($validated['status'] === 'accepted') {
+                    // Reload the book to check if rev_book_id was set
+                    $book->refresh();
+                    if (empty($book->rev_book_id)) {
+                        $erprevError = 'Note: Book was accepted but could not be registered with ERPREV system. Please check system connectivity.';
+                    }
+                }
+                
+                Log::info('Book review successful', [
+                    'book_id' => $book->id,
+                    'book_title' => $book->title,
+                    'old_status' => $book->getOriginal('status'),
+                    'new_status' => $validated['status'],
+                    'admin_id' => $admin->id,
+                    'admin_name' => $admin->name,
+                    'timestamp' => now()->toISOString(),
+                ]);
+                
                 if ($request->expectsJson()) {
-                    return response()->json([
+                    $response = [
                         'success' => true,
                         'message' => 'Book status updated successfully! Author has been notified.'
-                    ]);
+                    ];
+                    if ($erprevError) {
+                        $response['warning'] = $erprevError;
+                    }
+                    return response()->json($response);
                 }
-                return back()->with('success', 'Book status updated successfully! Author has been notified.');
+                
+                $successMessage = 'Book status updated successfully! Author has been notified.';
+                if ($erprevError) {
+                    return back()->with('success', $successMessage)->with('warning', $erprevError);
+                }
+                return back()->with('success', $successMessage);
             } else {
                 Log::warning('Book review failed - service returned false', [
                     'book_id' => $book->id,
+                    'book_title' => $book->title,
                     'validated_data' => $validated,
+                    'admin_id' => $admin->id,
                 ]);
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to update book status.'
+                    ], 422);
+                }
+                return back()->with('error', 'Failed to update book status.');
             }
         } catch (\Exception $e) {
-            Log::error('Book review error: ' . $e->getMessage(), [
-                'exception' => $e,
+            Log::error('Book review process failed with exception', [
                 'book_id' => $book->id,
-                'request_data' => $request->all(),
+                'book_title' => $book->title,
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_trace' => $e->getTraceAsString(),
+                'book_data' => $book->toArray(),
+                'validated_data' => $validated ?? [],
+                'admin_id' => $admin->id,
+                'admin_name' => $admin->name,
+                'timestamp' => now()->toISOString(),
             ]);
             
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to update book status: ' . $e->getMessage()
-                ], 422);
+                ], 500);
             }
             return back()->with('error', 'Failed to update book status: ' . $e->getMessage());
         }
         
-        Log::warning('Book review failed - unknown reason', [
+        Log::warning('Book review reached unexpected code path', [
             'book_id' => $book->id,
-            'validated_data' => $validated,
+            'book_title' => $book->title,
+            'validated_data' => $validated ?? [],
+            'admin_id' => $admin->id,
         ]);
         
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update book status.'
-            ], 422);
+                'message' => 'Unexpected error occurred during book review.'
+            ], 500);
         }
-        return back()->with('error', 'Failed to update book status.');
+        return back()->with('error', 'Unexpected error occurred during book review.');
     }
 
     public function bulkAction(Request $request)
@@ -153,6 +247,7 @@ class BookReviewController extends Controller
 
         $books = Book::withTrashed()->whereIn('id', $validated['book_ids'])->get();
         $successCount = 0;
+        $admin = Auth::user();
 
         foreach ($books as $book) {
             $status = match($validated['action']) {
@@ -190,21 +285,44 @@ class BookReviewController extends Controller
                         $updated = $this->bookReviewService->reviewBook($book, [
                             'status' => $status,
                             'admin_notes' => $validated['admin_notes'] ?? null,
-                        ], auth()->user());
+                        ], $admin);
                         
                         if ($updated) {
                             $successCount++;
                         }
                     } catch (\Exception $e) {
-                        Log::error('Bulk action book review error: ' . $e->getMessage());
+                        Log::error('Bulk action book review error: ' . $e->getMessage(), [
+                            'exception' => $e,
+                            'book_id' => $book->id,
+                            'admin_id' => $admin->id,
+                            'admin_name' => $admin->name,
+                        ]);
                     }
                     break;
             }
         }
 
+        Log::info('Bulk book action completed', [
+            'action' => $validated['action'],
+            'requested_count' => count($validated['book_ids']),
+            'success_count' => $successCount,
+            'admin_id' => $admin->id,
+            'admin_name' => $admin->name,
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => "Successfully processed {$successCount} books."
         ]);
+    }
+    
+    /**
+     * View recent book review logs
+     */
+    public function reviewLogs()
+    {
+        // This would typically read from the log file or a dedicated logs table
+        // For now, we'll just return a view that explains how to check logs
+        return view('admin.books.logs');
     }
 }

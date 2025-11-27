@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Book;
+use Illuminate\Support\Facades\Log;
 
 class BookStatusChanged extends Notification implements ShouldQueue
 {
@@ -33,6 +34,15 @@ class BookStatusChanged extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
+        Log::info('BookStatusChanged: Determining notification channels', [
+            'book_id' => $this->book->id,
+            'book_title' => $this->book->title,
+            'user_id' => $notifiable->id,
+            'user_name' => $notifiable->name,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
+        ]);
+        
         return ['mail', 'database'];
     }
 
@@ -41,6 +51,15 @@ class BookStatusChanged extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        Log::info('BookStatusChanged: Preparing email notification', [
+            'book_id' => $this->book->id,
+            'book_title' => $this->book->title,
+            'user_id' => $notifiable->id,
+            'user_name' => $notifiable->name,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
+        ]);
+        
         return (new MailMessage)
             ->subject('Book Status Update: ' . $this->book->title)
             ->view('emails.book-status-changed', [
@@ -57,6 +76,15 @@ class BookStatusChanged extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        Log::info('BookStatusChanged: Preparing database notification', [
+            'book_id' => $this->book->id,
+            'book_title' => $this->book->title,
+            'user_id' => $notifiable->id,
+            'user_name' => $notifiable->name,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
+        ]);
+        
         return [
             'type' => 'book_status_changed',
             'book_id' => $this->book->id,
@@ -93,5 +121,34 @@ class BookStatusChanged extends Notification implements ShouldQueue
             default:
                 return route('author.books.show', $this->book);
         }
+    }
+    
+    /**
+     * Handle successful notification sending
+     */
+    public function afterCommit()
+    {
+        Log::info('BookStatusChanged: Notification sent successfully', [
+            'book_id' => $this->book->id,
+            'book_title' => $this->book->title,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
+        ]);
+    }
+    
+    /**
+     * Handle failed notification sending
+     */
+    public function failed(\Exception $exception)
+    {
+        Log::error('BookStatusChanged: Notification failed to send', [
+            'book_id' => $this->book->id,
+            'book_title' => $this->book->title,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
+            'exception_class' => get_class($exception),
+            'exception_message' => $exception->getMessage(),
+            'exception_trace' => $exception->getTraceAsString(),
+        ]);
     }
 }

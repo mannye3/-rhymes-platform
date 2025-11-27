@@ -27,7 +27,7 @@
                                         <li><a href="javascript:void(0)" class="btn btn-success" onclick="reviewBook({{ $book->id }}, 'accepted'); return false;"><em class="icon ni ni-check"></em><span>Approve</span></a></li>
                                         <li><a href="javascript:void(0)" class="btn btn-danger" onclick="reviewBook({{ $book->id }}, 'rejected'); return false;"><em class="icon ni ni-cross"></em><span>Reject</span></a></li>
                                     @endif
-                                    <li><a href="{{ route('admin.books.index') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-arrow-left"></em><span>Back to Books</span></a></li>
+                                    <li><a href="{{ route('admin.admin.books.index') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-arrow-left"></em><span>Back to Books</span></a></li>
                                 </ul>
                             </div>
                         </div>
@@ -346,6 +346,9 @@
 
 @push('scripts')
 <script>
+// Store the route URL in a JavaScript variable
+const reviewBookRoute = "{{ route('admin.books.review', ['book' => 'BOOK_ID_PLACEHOLDER']) }}";
+
 function reviewBook(bookId, status) {
     // Prevent default action
     event.preventDefault();
@@ -393,7 +396,6 @@ function submitReview() {
     // Create the data object
     const data = {
         _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        book_id: bookId,
         status: status
     };
     
@@ -401,19 +403,17 @@ function submitReview() {
     if (adminNotes) data.admin_notes = adminNotes;
     if (revBookId) data.rev_book_id = revBookId;
     
-    // Convert to FormData
-    const formData = new FormData();
-    for (const key in data) {
-        formData.append(key, data[key]);
-    }
+    // Generate the proper URL using the route pattern
+    const url = reviewBookRoute.replace('BOOK_ID_PLACEHOLDER', bookId);
     
-    fetch(`/admin/books/${bookId}/review`, {
+    fetch(url, {
         method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: formData
+        body: JSON.stringify(data)
     })
     .then(response => {
         console.log('Response status:', response.status);

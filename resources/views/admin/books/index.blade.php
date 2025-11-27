@@ -69,6 +69,12 @@
                                                 <button type="submit" class="btn btn-sm btn-icon btn-primary"><em class="icon ni ni-search"></em></button>
                                             </div>
                                         </form>
+                                        <div class="btn-group ms-2">
+                                            <a href="{{ route('admin.books.logs') }}" class="btn btn-sm btn-outline-secondary">
+                                                <em class="icon ni ni-file-text"></em>
+                                                <span>Logs</span>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -464,6 +470,9 @@
 
 @push('scripts')
 <script>
+// Store the route URL in a JavaScript variable
+const reviewBookRoute = "{{ route('admin.books.review', ['book' => 'BOOK_ID_PLACEHOLDER']) }}";
+
 // Select all functionality
 document.getElementById('uid-all').addEventListener('change', function() {
     const checkboxes = document.querySelectorAll('.book-checkbox');
@@ -528,24 +537,12 @@ function submitReview(bookId) {
     const csrfTokenValue = csrfToken.getAttribute('content');
     console.log('CSRF Token:', csrfTokenValue);
     
+    // Get form data
     const formData = new FormData(form);
     
     // Log form data for debugging
     console.log('Submitting review for book ID:', bookId);
     console.log('Form element:', form);
-    console.log('Form elements:');
-    for (let i = 0; i < form.elements.length; i++) {
-        const element = form.elements[i];
-        if (element.name) {
-            console.log(element.name, element.value, element.type);
-        }
-    }
-    
-    // Log FormData entries
-    console.log('FormData entries:');
-    for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-    }
     
     // Get the selected status
     const selectedStatus = form.querySelector('input[name="status"]:checked');
@@ -554,10 +551,21 @@ function submitReview(bookId) {
         return;
     }
     
-    // Convert FormData to URLSearchParams for better compatibility with PATCH requests
-    const urlParams = new URLSearchParams();
-    for (let [key, value] of formData.entries()) {
-        urlParams.append(key, value);
+    // Create the data object
+    const data = {
+        _token: csrfTokenValue,
+        status: selectedStatus.value
+    };
+    
+    // Add optional fields if they have values
+    const adminNotes = form.querySelector('textarea[name="admin_notes"]');
+    if (adminNotes && adminNotes.value) {
+        data.admin_notes = adminNotes.value;
+    }
+    
+    const revBookId = form.querySelector('input[name="rev_book_id"]');
+    if (revBookId && revBookId.value) {
+        data.rev_book_id = revBookId.value;
     }
     
     // Show loading indicator
@@ -572,14 +580,17 @@ function submitReview(bookId) {
     submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
     submitButton.disabled = true;
     
-    fetch(`/admin/books/${bookId}/review`, {
+    // Generate the proper URL using the route pattern
+    const url = reviewBookRoute.replace('BOOK_ID_PLACEHOLDER', bookId);
+    
+    fetch(url, {
         method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': csrfTokenValue,
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
             'Accept': 'application/json',
         },
-        body: urlParams
+        body: JSON.stringify(data)
     })
     .then(response => {
         console.log('Response status:', response.status);

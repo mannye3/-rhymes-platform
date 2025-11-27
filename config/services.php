@@ -42,4 +42,11 @@ return [
         'enabled' => env('REV_SYNC_ENABLED', false),
     ],
 
+    'erprev' => [
+        'account_url' => env('ERPREV_ACCOUNT_URL'),
+        'api_key' => env('ERPREV_API_KEY'),
+        'api_secret' => env('ERPREV_API_SECRET'),
+        'enabled' => env('ERPREV_SYNC_ENABLED', false),
+    ],
+
 ];

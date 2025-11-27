@@ -134,6 +134,9 @@
                                             <a href="{{ route('admin.books.index') }}" class="nk-menu-link"><span class="nk-menu-text">All Books</span></a>
                                         </li>
                                         <li class="nk-menu-item">
+                                            <a href="{{ route('admin.books.logs') }}" class="nk-menu-link"><span class="nk-menu-text">Review Logs</span></a>
+                                        </li>
+                                        <li class="nk-menu-item">
                                             <a href="{{ route('admin.books.pending') }}" class="nk-menu-link"><span class="nk-menu-text">Pending Review</span></a>
                                         </li>
                                         <li class="nk-menu-item">
@@ -156,6 +159,31 @@
                                         </li>
                                         <li class="nk-menu-item">
                                             <a href="{{ route('admin.payouts.completed') }}" class="nk-menu-link"><span class="nk-menu-text">Completed</span></a>
+                                        </li>
+                                    </ul><!-- .nk-menu-sub -->
+                                </li><!-- .nk-menu-item -->
+                                
+                                <li class="nk-menu-heading">
+                                    <h6 class="overline-title text-primary-alt">ERPREV Integration</h6>
+                                </li><!-- .nk-menu-heading -->
+                                
+                                <li class="nk-menu-item has-sub">
+                                    <a href="#" class="nk-menu-link nk-menu-toggle">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-swap"></em></span>
+                                        <span class="nk-menu-text">ERPREV Data</span>
+                                    </a>
+                                    <ul class="nk-menu-sub">
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.erprev.sales') }}" class="nk-menu-link"><span class="nk-menu-text">Sales Data</span></a>
+                                        </li>
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.erprev.inventory') }}" class="nk-menu-link"><span class="nk-menu-text">Inventory</span></a>
+                                        </li>
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.erprev.products') }}" class="nk-menu-link"><span class="nk-menu-text">Products</span></a>
+                                        </li>
+                                        <li class="nk-menu-item">
+                                            <a href="{{ route('admin.erprev.monitoring') }}" class="nk-menu-link"><span class="nk-menu-text">Sync Monitoring</span></a>
                                         </li>
                                     </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->

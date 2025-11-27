@@ -1,8 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Services\RevService;
+use Illuminate\Support\Facades\Log;
+
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ErpRevController;
 use App\Http\Controllers\Author\AuthorController;
 use App\Http\Controllers\Author\BookController;
 use App\Http\Controllers\Author\WalletController;
@@ -18,6 +23,267 @@ use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\ProfileController;
+
+// Test route for ERPREV integration
+Route::get('/test-erprev', function () {
+    try {
+        $revService = new \App\Services\RevService();
+        
+        // Test connection
+        $connectionResult = $revService->testConnection();
+        
+        if (!$connectionResult['success']) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Connection failed: ' . $connectionResult['message']
+            ]);
+        }
+        
+        // Test getting products
+        $productsResult = $revService->getProductsList(['limit' => 5]);
+        
+        if (!$productsResult['success']) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product retrieval failed: ' . $productsResult['message']
+            ]);
+        }
+        
+        $products = $productsResult['data']['records'] ?? [];
+        
+        // Test getting inventory
+        $inventoryResult = $revService->getStockList(['limit' => 5]);
+        
+        if (!$inventoryResult['success']) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Inventory retrieval failed: ' . $inventoryResult['message']
+            ]);
+        }
+        
+        $inventory = $inventoryResult['data']['records'] ?? [];
+        
+        return response()->json([
+            'status' => 'success',
+            'connection' => $connectionResult,
+            'products' => [
+                'count' => count($products),
+                'data' => $products
+            ],
+            'inventory' => [
+                'count' => count($inventory),
+                'data' => $inventory
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Exception occurred: ' . $e->getMessage()
+        ]);
+    }
+});
+
+// Test route for ERPREV debugging
+Route::get('/test-erprev-debug', function (Request $request, RevService $revService) {
+    Log::info('Manual ERPREV test initiated');
+    
+    // Test connection
+    $connectionResult = $revService->testConnection();
+    Log::info('Connection test result', $connectionResult);
+    
+    return response()->json([
+        'connection_test' => $connectionResult,
+    ]);
+});
+
+// Another test route
+Route::get('/test-erprev-full', function (Request $request, RevService $revService) {
+    Log::info('Full ERPREV test initiated');
+    
+    // Test connection
+    $connectionResult = $revService->testConnection();
+    Log::info('Connection test result', $connectionResult);
+    
+    // Test products
+    $productsResult = $revService->getProductsList(['limit' => 5]);
+    Log::info('Products test result', [
+        'success' => $productsResult['success'],
+        'record_count' => count($productsResult['data']['records'] ?? []),
+        'sample_data' => count($productsResult['data']['records'] ?? []) > 0 ? $productsResult['data']['records'][0] : null
+    ]);
+    
+    // Test inventory
+    $inventoryResult = $revService->getStockList(['limit' => 5]);
+    Log::info('Inventory test result', [
+        'success' => $inventoryResult['success'],
+        'record_count' => count($inventoryResult['data']['records'] ?? []),
+        'sample_data' => count($inventoryResult['data']['records'] ?? []) > 0 ? $inventoryResult['data']['records'][0] : null
+    ]);
+    
+    // Test sales
+    $salesResult = $revService->getSalesItems(['limit' => 5]);
+    Log::info('Sales test result', [
+        'success' => $salesResult['success'],
+        'record_count' => count($salesResult['data']['records'] ?? []),
+        'sample_data' => count($salesResult['data']['records'] ?? []) > 0 ? $salesResult['data']['records'][0] : null
+    ]);
+    
+    return response()->json([
+        'connection_test' => $connectionResult,
+        'products_test' => $productsResult,
+        'inventory_test' => $inventoryResult,
+        'sales_test' => $salesResult,
+    ]);
+});
+
+// Simple test to see if we can get data
+Route::get('/test-erprev-simple', function (Request $request, RevService $revService) {
+    $result = $revService->getProductsList(['limit' => 3]);
+    
+    if ($result['success']) {
+        return response()->json([
+            'success' => true,
+            'record_count' => count($result['data']['records']),
+            'records' => $result['data']['records']
+        ]);
+    } else {
+        return response()->json([
+            'success' => false,
+            'error' => $result['message']
+        ]);
+    }
+});
+
+// Test route to see what's being passed to the view
+Route::get('/test-erprev-view-data', function (Request $request, RevService $revService) {
+    $result = $revService->getProductsList(['limit' => 5]);
+    
+    if ($result['success']) {
+        $products = $result['data']['records'] ?? [];
+        $filters = [];
+        
+        // Log what we're passing to the view
+        Log::info('View data test', [
+            'product_count' => count($products),
+            'products_type' => gettype($products),
+            'first_product' => count($products) > 0 ? $products[0] : null,
+            'filters' => $filters
+        ]);
+        
+        // Return the same data that would be passed to the view
+        return response()->json([
+            'products' => $products,
+            'filters' => $filters,
+            'product_count' => count($products)
+        ]);
+    } else {
+        return response()->json([
+            'error' => $result['message']
+        ]);
+    }
+});
+
+// Debug route to test service directly from web
+Route::get('/debug-erprev-service', function (Request $request) {
+    try {
+        // Create service instance directly
+        $service = new RevService();
+        
+        // Test connection
+        $connectionResult = $service->testConnection();
+        
+        // If connection works, try getting some data
+        if ($connectionResult['success']) {
+            $productsResult = $service->getProductsList(['limit' => 3]);
+            $salesResult = $service->getSalesItems(['limit' => 3]);
+            
+            return response()->json([
+                'connection' => $connectionResult,
+                'products' => $productsResult,
+                'sales' => $salesResult,
+            ]);
+        } else {
+            return response()->json([
+                'connection' => $connectionResult,
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
+    }
+});
+
+// Debug route to check logs
+Route::get('/debug-erprev-logs', function () {
+    $logFile = storage_path('logs/laravel.log');
+    
+    if (file_exists($logFile)) {
+        // Get last 100 lines of log file
+        $lines = file($logFile);
+        $lastLines = array_slice($lines, -100);
+        
+        return response()->json([
+            'log_entries' => $lastLines,
+            'entry_count' => count($lastLines),
+        ]);
+    } else {
+        return response()->json([
+            'error' => 'Log file not found',
+            'log_file_path' => $logFile,
+        ]);
+    }
+});
+
+// Debug route to test service directly from web with full logging
+Route::get('/debug-erprev-service-full', function (Request $request) {
+    try {
+        Log::info('=== DEBUG SERVICE FULL TEST STARTED ===');
+        
+        // Create service instance directly
+        $service = new RevService();
+        
+        // Test connection
+        Log::info('Testing connection...');
+        $connectionResult = $service->testConnection();
+        Log::info('Connection test result', $connectionResult);
+        
+        // If connection works, try getting sales data
+        if ($connectionResult['success']) {
+            Log::info('Getting sales data...');
+            $salesResult = $service->getSalesItems(['limit' => 3]);
+            Log::info('Sales data result', $salesResult);
+            
+            Log::info('=== DEBUG SERVICE FULL TEST COMPLETED ===');
+            
+            return response()->json([
+                'connection' => $connectionResult,
+                'sales' => $salesResult,
+            ]);
+        } else {
+            Log::error('Connection failed', $connectionResult);
+            Log::info('=== DEBUG SERVICE FULL TEST COMPLETED WITH CONNECTION ERROR ===');
+            
+            return response()->json([
+                'connection' => $connectionResult,
+                'error' => 'Connection failed',
+            ]);
+        }
+    } catch (\Exception $e) {
+        Log::error('Exception in debug service test', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        
+        Log::info('=== DEBUG SERVICE FULL TEST COMPLETED WITH EXCEPTION ===');
+        
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
+    }
+});
 
 // Test route for user update
 Route::get('/test-update', function () {
@@ -130,6 +396,13 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
             Route::get('/unified', [AdminController::class, 'unifiedDashboard'])->name('unified-dashboard');
             
+            // ERPREV Integration Views
+            Route::get('/erprev/sales', [ErpRevController::class, 'salesData'])->name('erprev.sales');
+            Route::get('/erprev/inventory', [ErpRevController::class, 'inventoryData'])->name('erprev.inventory');
+            Route::get('/erprev/products', [ErpRevController::class, 'productListings'])->name('erprev.products');
+            Route::get('/erprev/summary', [ErpRevController::class, 'salesSummary'])->name('erprev.summary');
+            Route::get('/erprev/monitoring', [ErpRevController::class, 'syncMonitoring'])->name('erprev.monitoring');
+            
             // User Management
             Route::get('users/activity', [AdminController::class, 'userActivity'])->name('users.activity');
             Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
@@ -154,6 +427,7 @@ Route::middleware('auth')->group(function () {
             Route::get('books/{book}', [BookReviewController::class, 'show'])->name('books.show');
             Route::patch('books/{book}/review', [BookReviewController::class, 'review'])->name('books.review');
             Route::post('books/bulk-action', [BookReviewController::class, 'bulkAction'])->name('books.bulk-action');
+            Route::get('books/logs', [BookReviewController::class, 'reviewLogs'])->name('books.logs');
             
             // Payout Management
             Route::get('payouts', [PayoutManagementController::class, 'index'])->name('payouts.index');
@@ -178,7 +452,7 @@ Route::middleware('auth')->group(function () {
             Route::get('notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
             Route::post('notifications', [AdminNotificationController::class, 'store'])->name('notifications.store');
             Route::post('notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-            Route::post('authors/send-message', [AdminNotificationController::class, 'sendMessage'])->name('authors.send-message');
+            Route::post('notifications/send-message', [AdminNotificationController::class, 'sendMessage'])->name('notifications.send-message');
             
             // Admin Profile
             Route::get('profile', [AdminProfileController::class, 'index'])->name('profile.index');

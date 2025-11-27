@@ -27,7 +27,7 @@
                                 <ul class="nk-block-tools g-3">
                                     <li><a href="{{ route('admin.books.index') }}" class="btn btn-primary"><em class="icon ni ni-eye"></em><span>Review Books</span></a></li>
                                     <li><a href="{{ route('admin.payouts.index') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-tranx"></em><span>Manage Payouts</span></a></li>
-                                    <li><a href="{{ route('admin.unified-dashboard') }}" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-dashboard"></em><span>Unified Dashboard</span></a></li>
+                                    <li><a href="" class="btn btn-white btn-dim btn-outline-light"><em class="icon ni ni-swap"></em><span>ERPREV Data</span></a></li>
                                 </ul>
                             </div>
                         </div>
