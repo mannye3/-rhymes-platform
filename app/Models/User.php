@@ -87,8 +87,6 @@ class User extends Authenticatable
 
     public function getWalletBalance()
     {
-        return $this->walletTransactions()
-            ->where('type', '!=', 'payout')
-            ->sum('amount');
+        return $this->walletTransactions()->sum('amount');
     }
 }

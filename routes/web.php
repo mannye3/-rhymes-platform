@@ -24,6 +24,34 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\ProfileController;
 
+// Test route for payout debugging
+Route::get('/test-payout-route/{id}', function ($id) {
+    try {
+        $payout = \App\Models\Payout::findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'payout' => $payout,
+            'message' => 'Route working correctly'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'message' => 'Route test failed'
+        ], 404);
+    }
+})->middleware('auth');
+
+// Test route for payout route binding
+Route::get('/test-payout-binding/{payout}', function (\App\Models\Payout $payout) {
+    return response()->json([
+        'success' => true,
+        'payout_id' => $payout->id,
+        'payout_amount' => $payout->amount_requested,
+        'message' => 'Route model binding working correctly'
+    ]);
+})->middleware('auth');
+
 // Test route for ERPREV integration
 Route::get('/test-erprev', function () {
     try {
@@ -35,7 +63,7 @@ Route::get('/test-erprev', function () {
         if (!$connectionResult['success']) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Connection failed: ' . $connectionResult['message']
+                'message' => 'Connection failed: ' + $connectionResult['message']
             ]);
         }
         
@@ -45,7 +73,7 @@ Route::get('/test-erprev', function () {
         if (!$productsResult['success']) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Product retrieval failed: ' . $productsResult['message']
+                'message' => 'Product retrieval failed: ' + $productsResult['message']
             ]);
         }
         
@@ -57,7 +85,7 @@ Route::get('/test-erprev', function () {
         if (!$inventoryResult['success']) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Inventory retrieval failed: ' . $inventoryResult['message']
+                'message' => 'Inventory retrieval failed: ' + $inventoryResult['message']
             ]);
         }
         
@@ -78,7 +106,7 @@ Route::get('/test-erprev', function () {
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
-            'message' => 'Exception occurred: ' . $e->getMessage()
+            'message' => 'Exception occurred: ' + $e->getMessage()
         ]);
     }
 });
@@ -282,6 +310,35 @@ Route::get('/debug-erprev-service-full', function (Request $request) {
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
         ], 500);
+    }
+});
+
+// Test route for item categories
+Route::get('/test-erprev-categories', function (Request $request, RevService $revService) {
+    Log::info('Item categories test initiated');
+    
+    $result = $revService->getItemCategories();
+    
+    if ($result['success']) {
+        Log::info('Item categories retrieved successfully', [
+            'count' => count($result['data']['records'] ?? []),
+            'sample' => count($result['data']['records'] ?? []) > 0 ? $result['data']['records'][0] : null
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $result['data'],
+            'count' => count($result['data']['records'] ?? [])
+        ]);
+    } else {
+        Log::error('Failed to retrieve item categories', [
+            'error' => $result['message']
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'error' => $result['message']
+        ]);
     }
 });
 

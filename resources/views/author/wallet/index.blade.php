@@ -45,7 +45,7 @@
                                     </div>
                                 </div>
                                 <div class="card-amount">
-                                    <span class="amount">${{ number_format($balance, 2) }}</span>
+                                    <span class="amount">₦{{ number_format($balance, 2) }}</span>
                                 </div>
                                 <div class="card-note">
                                     <span class="text-soft">Ready for withdrawal</span>
@@ -65,7 +65,7 @@
                                     </div>
                                 </div>
                                 <div class="card-amount">
-                                    <span class="amount">${{ number_format($transactions->where('type', 'sale')->sum('amount'), 2) }}</span>
+                                    <span class="amount">₦{{ number_format($transactions->where('type', 'sale')->sum('amount'), 2) }}</span>
                                 </div>
                                 <div class="card-note">
                                     <span class="text-soft">Lifetime earnings</span>
@@ -122,10 +122,10 @@
                                         <span class="tb-amount">{{ $sale['sales_count'] }}</span>
                                     </div>
                                     <div class="nk-tb-col tb-col-lg">
-                                        <span class="tb-amount">${{ number_format($sale['total_sales'], 2) }}</span>
+                                        <span class="tb-amount">₦{{ number_format($sale['total_sales'], 2) }}</span>
                                     </div>
                                     <div class="nk-tb-col tb-col-md">
-                                        <span class="tb-amount">${{ number_format($sale['total_sales'] / $sale['sales_count'], 2) }}</span>
+                                        <span class="tb-amount">₦{{ number_format($sale['total_sales'] / $sale['sales_count'], 2) }}</span>
                                     </div>
                                 </div>
                                 @endforeach
@@ -195,7 +195,7 @@
                                     </div>
                                     <div class="nk-tb-col tb-col-lg">
                                         <span class="tb-amount {{ $transaction->amount > 0 ? 'text-success' : 'text-danger' }}">
-                                            {{ $transaction->amount > 0 ? '+' : '' }}${{ number_format($transaction->amount, 2) }}
+                                            {{ $transaction->amount > 0 ? '+' : '' }}₦{{ number_format($transaction->amount, 2) }}
                                         </span>
                                     </div>
                                     <div class="nk-tb-col tb-col-md">

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Payout;
 use App\Services\Admin\PayoutManagementService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class PayoutManagementController extends Controller
 {
@@ -58,6 +60,25 @@ class PayoutManagementController extends Controller
 
     public function show(Payout $payout)
     {
+        // Add debugging
+        Log::info('Payout show method called', [
+            'payout_id' => $payout->id ?? 'null',
+            'request_wants_json' => request()->wantsJson(),
+            'user_authenticated' => Auth::check()
+        ]);
+        
+        // Check if payout exists
+        if (!$payout->exists) {
+            Log::warning('Payout not found', ['payout_id' => request()->route('payout')]);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payout not found'
+                ], 404);
+            }
+            abort(404);
+        }
+        
         $payout->load(['user']);
         
         // Return JSON response for AJAX requests
@@ -78,7 +99,7 @@ class PayoutManagementController extends Controller
         ]);
 
         try {
-            $admin = auth()->user();
+            $admin = Auth::user();
             $approved = $this->payoutManagementService->approvePayout(
                 $payout, 
                 $request->admin_notes, 
@@ -126,7 +147,7 @@ class PayoutManagementController extends Controller
         ]);
 
         try {
-            $admin = auth()->user();
+            $admin = Auth::user();
             $denied = $this->payoutManagementService->denyPayout(
                 $payout, 
                 $request->admin_notes, 
@@ -177,7 +198,7 @@ class PayoutManagementController extends Controller
 
         try {
             $payouts = Payout::whereIn('id', $request->payout_ids)->get();
-            $admin = auth()->user();
+            $admin = Auth::user();
             $successCount = 0;
 
             foreach ($payouts as $payout) {

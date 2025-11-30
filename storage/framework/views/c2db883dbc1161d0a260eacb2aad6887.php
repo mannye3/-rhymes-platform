@@ -1,12 +1,10 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'Payout Management | Admin Panel'); ?>
 
-@section('title', 'Payout Management | Admin Panel')
+<?php $__env->startSection('page-title', 'Payout Management'); ?>
 
-@section('page-title', 'Payout Management')
+<?php $__env->startSection('page-description', 'Review and manage author payout requests'); ?>
 
-@section('page-description', 'Review and manage author payout requests')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="nk-content nk-content-fluid">
     <div class="container-xl wide-xl">
         <div class="nk-content-body">
@@ -18,17 +16,7 @@
                             <p>Review, approve, and manage author payout requests.</p>
                         </div>
                     </div>
-                    {{-- <div class="nk-block-head-content">
-                        <div class="toggle-wrap nk-block-tools-toggle">
-                            <a href="#" class="btn btn-icon btn-trigger toggle-expand me-n1" data-target="pageMenu"><em class="icon ni ni-more-v"></em></a>
-                            <div class="toggle-expand-content" data-content="pageMenu">
-                                <ul class="nk-block-tools g-3">
-                                    <li><a href="#" class="btn btn-success" onclick="bulkAction('approve')"><em class="icon ni ni-check"></em><span>Bulk Approve</span></a></li>
-                                    <li><a href="#" class="btn btn-danger" onclick="bulkAction('deny')"><em class="icon ni ni-cross"></em><span>Bulk Deny</span></a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div> --}}
+                    
                 </div>
             </div>
 
@@ -46,8 +34,8 @@
                                 </div>
                             </div>
                             <div class="card-amount">
-                                <span class="amount">{{ number_format($stats['total_payouts']) }}</span>
-                                <span class="sub-title">₦{{ number_format($stats['total_amount_requested'], 2) }} requested</span>
+                                <span class="amount"><?php echo e(number_format($stats['total_payouts'])); ?></span>
+                                <span class="sub-title">₦<?php echo e(number_format($stats['total_amount_requested'], 2)); ?> requested</span>
                             </div>
                         </div>
                     </div>
@@ -64,8 +52,8 @@
                                 </div>
                             </div>
                             <div class="card-amount">
-                                <span class="amount">{{ number_format($stats['pending_payouts']) }}</span>
-                                <span class="sub-title">₦{{ number_format($stats['pending_amount'], 2) }}</span>
+                                <span class="amount"><?php echo e(number_format($stats['pending_payouts'])); ?></span>
+                                <span class="sub-title">₦<?php echo e(number_format($stats['pending_amount'], 2)); ?></span>
                             </div>
                         </div>
                     </div>
@@ -82,8 +70,8 @@
                                 </div>
                             </div>
                             <div class="card-amount">
-                                <span class="amount">{{ number_format($stats['approved_payouts']) }}</span>
-                                <span class="sub-title">₦{{ number_format($stats['approved_amount'], 2) }}</span>
+                                <span class="amount"><?php echo e(number_format($stats['approved_payouts'])); ?></span>
+                                <span class="sub-title">₦<?php echo e(number_format($stats['approved_amount'], 2)); ?></span>
                             </div>
                         </div>
                     </div>
@@ -100,7 +88,7 @@
                                 </div>
                             </div>
                             <div class="card-amount">
-                                <span class="amount">{{ number_format($stats['denied_payouts']) }}</span>
+                                <span class="amount"><?php echo e(number_format($stats['denied_payouts'])); ?></span>
                                 <span class="sub-title">Rejected requests</span>
                             </div>
                         </div>
@@ -115,26 +103,26 @@
                             <div class="card-title-group">
                                 <div class="card-tools">
                                     <div class="form-inline flex-nowrap gx-3">
-                                        <form method="GET" action="{{ route('admin.payouts.index') }}" class="d-flex gap-2">
+                                        <form method="GET" action="<?php echo e(route('admin.payouts.index')); ?>" class="d-flex gap-2">
                                             <div class="form-wrap w-150px">
                                                 <select name="status" class="form-select form-select-sm">
                                                     <option value="">All Status</option>
-                                                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                                                    <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
-                                                    <option value="denied" {{ request('status') === 'denied' ? 'selected' : '' }}>Denied</option>
+                                                    <option value="pending" <?php echo e(request('status') === 'pending' ? 'selected' : ''); ?>>Pending</option>
+                                                    <option value="approved" <?php echo e(request('status') === 'approved' ? 'selected' : ''); ?>>Approved</option>
+                                                    <option value="denied" <?php echo e(request('status') === 'denied' ? 'selected' : ''); ?>>Denied</option>
                                                 </select>
                                             </div>
                                             <div class="form-wrap w-150px">
-                                                <input type="number" name="amount_min" class="form-control form-control-sm" placeholder="Min Amount" value="{{ request('amount_min') }}">
+                                                <input type="number" name="amount_min" class="form-control form-control-sm" placeholder="Min Amount" value="<?php echo e(request('amount_min')); ?>">
                                             </div>
                                             <div class="form-wrap w-150px">
-                                                <input type="number" name="amount_max" class="form-control form-control-sm" placeholder="Max Amount" value="{{ request('amount_max') }}">
+                                                <input type="number" name="amount_max" class="form-control form-control-sm" placeholder="Max Amount" value="<?php echo e(request('amount_max')); ?>">
                                             </div>
                                             <div class="form-wrap flex-md-nowrap">
                                                 <div class="form-icon form-icon-right">
                                                     <em class="icon ni ni-search"></em>
                                                 </div>
-                                                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search authors..." value="{{ request('search') }}">
+                                                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search authors..." value="<?php echo e(request('search')); ?>">
                                             </div>
                                             <div class="btn-wrap">
                                                 <button type="submit" class="btn btn-sm btn-icon btn-primary"><em class="icon ni ni-search"></em></button>
@@ -148,12 +136,7 @@
                         <div class="card-inner p-0">
                             <div class="nk-tb-list nk-tb-ulist">
                                 <div class="nk-tb-item nk-tb-head">
-                                    {{-- <div class="nk-tb-col nk-tb-col-check">
-                                        <div class="custom-control custom-control-sm custom-checkbox notext">
-                                            <input type="checkbox" class="custom-control-input" id="uid-all">
-                                            <label class="custom-control-label" for="uid-all"></label>
-                                        </div>
-                                    </div> --}}
+                                    
                                     <div class="nk-tb-col"><span class="sub-text">Author</span></div>
                                     <div class="nk-tb-col tb-col-mb"><span class="sub-text">Amount</span></div>
                                     <div class="nk-tb-col tb-col-md"><span class="sub-text">Status</span></div>
@@ -172,45 +155,40 @@
                                     </div>
                                 </div>
 
-                                @forelse($payouts as $payout)
+                                <?php $__empty_1 = true; $__currentLoopData = $payouts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $payout): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <div class="nk-tb-item">
-                                        {{-- <div class="nk-tb-col nk-tb-col-check">
-                                            <div class="custom-control custom-control-sm custom-checkbox notext">
-                                                <input type="checkbox" class="custom-control-input payout-checkbox" id="uid{{ $payout->id }}" value="{{ $payout->id }}">
-                                                <label class="custom-control-label" for="uid{{ $payout->id }}"></label>
-                                            </div>
-                                        </div> --}}
+                                        
                                         <div class="nk-tb-col">
                                             <div class="user-card">
                                                 <div class="user-avatar bg-primary-dim">
-                                                    <span>{{ strtoupper(substr($payout->user->name, 0, 2)) }}</span>
+                                                    <span><?php echo e(strtoupper(substr($payout->user->name, 0, 2))); ?></span>
                                                 </div>
                                                 <div class="user-info">
-                                                    <span class="tb-lead">{{ $payout->user->name }}</span>
-                                                    <span>{{ $payout->user->email }}</span>
+                                                    <span class="tb-lead"><?php echo e($payout->user->name); ?></span>
+                                                    <span><?php echo e($payout->user->email); ?></span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="nk-tb-col tb-col-mb">
-                                            <span class="tb-lead">₦{{ number_format($payout->amount_requested, 2) }}</span>
+                                            <span class="tb-lead">₦<?php echo e(number_format($payout->amount_requested, 2)); ?></span>
                                             <span class="tb-sub">Requested</span>
                                         </div>
                                         <div class="nk-tb-col tb-col-md">
-                                            @if($payout->status === 'pending')
+                                            <?php if($payout->status === 'pending'): ?>
                                                 <span class="badge badge-sm badge-dim bg-outline-warning">Pending</span>
-                                            @elseif($payout->status === 'approved')
+                                            <?php elseif($payout->status === 'approved'): ?>
                                                 <span class="badge badge-sm badge-dim bg-outline-success">Approved</span>
-                                            @elseif($payout->status === 'denied')
+                                            <?php elseif($payout->status === 'denied'): ?>
                                                 <span class="badge badge-sm badge-dim bg-outline-danger">Denied</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                         <div class="nk-tb-col tb-col-lg">
-                                            <span class="tb-lead">{{ ucfirst($payout->payment_method) }}</span>
-                                            <span class="tb-sub">{{ $payout->payment_details }}</span>
+                                            <span class="tb-lead"><?php echo e(ucfirst($payout->payment_method)); ?></span>
+                                            <span class="tb-sub"><?php echo e($payout->payment_details); ?></span>
                                         </div>
                                         <div class="nk-tb-col tb-col-lg">
-                                            <span>{{ $payout->created_at->format('M d, Y') }}</span>
-                                            <span class="tb-sub">{{ $payout->created_at->diffForHumans() }}</span>
+                                            <span><?php echo e($payout->created_at->format('M d, Y')); ?></span>
+                                            <span class="tb-sub"><?php echo e($payout->created_at->diffForHumans()); ?></span>
                                         </div>
                                         <div class="nk-tb-col nk-tb-col-tools">
                                             <ul class="nk-tb-actions gx-1">
@@ -220,11 +198,11 @@
                                                         <a href="#" class="dropdown-toggle btn btn-icon btn-trigger" data-bs-toggle="dropdown"><em class="icon ni ni-more-h"></em></a>
                                                         <div class="dropdown-menu dropdown-menu-end">
                                                             <ul class="link-list-opt no-bdr">
-                                                                <li><a href="#" onclick="viewPayout({{ $payout->id }}, event); return false;"><em class="icon ni ni-eye"></em><span>View Details</span></a></li>
-                                                                @if($payout->status === 'pending')
-                                                                    <li><a href="#" onclick="openReviewModal({{ $payout->id }}, 'approve', event); return false;"><em class="icon ni ni-check"></em><span>Approve</span></a></li>
-                                                                    <li><a href="#" onclick="openReviewModal({{ $payout->id }}, 'deny', event); return false;"><em class="icon ni ni-cross"></em><span>Deny</span></a></li>
-                                                                @endif
+                                                                <li><a href="#" onclick="viewPayout(<?php echo e($payout->id); ?>, event); return false;"><em class="icon ni ni-eye"></em><span>View Details</span></a></li>
+                                                                <?php if($payout->status === 'pending'): ?>
+                                                                    <li><a href="#" onclick="openReviewModal(<?php echo e($payout->id); ?>, 'approve', event); return false;"><em class="icon ni ni-check"></em><span>Approve</span></a></li>
+                                                                    <li><a href="#" onclick="openReviewModal(<?php echo e($payout->id); ?>, 'deny', event); return false;"><em class="icon ni ni-cross"></em><span>Deny</span></a></li>
+                                                                <?php endif; ?>
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -232,7 +210,7 @@
                                             </ul>
                                         </div>
                                     </div>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <div class="nk-tb-item">
                                         <div class="nk-tb-col">
                                             <div class="text-center py-4">
@@ -241,12 +219,13 @@
                                             </div>
                                         </div>
                                     </div>
-                                @endforelse
+                                <?php endif; ?>
                             </div>
                         </div>
 
                         <div class="card-inner">
-                            {{ $payouts->appends(request()->query())->links() }}
+                            <?php echo e($payouts->appends(request()->query())->links()); ?>
+
                         </div>
                     </div>
                 </div>
@@ -357,7 +336,7 @@
             </div>
             <div class="modal-body">
                 <form id="reviewForm">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" id="payoutId" name="payout_id">
                     <input type="hidden" id="reviewAction" name="action">
                     
@@ -399,7 +378,7 @@
     </div>
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 // View payout details
 function viewPayout(payoutId, event) {
@@ -422,7 +401,7 @@ function viewPayout(payoutId, event) {
     });
     
     // Use the correct base URL from Laravel
-    const baseUrl = "{{ url('/') }}";
+    const baseUrl = "<?php echo e(url('/')); ?>";
     const url = `${baseUrl}/admin/payouts/${payoutId}`;
     
     console.log('Fetching payout details from:', url);
@@ -533,7 +512,7 @@ function openReviewModal(payoutId, action, event) {
     });
     
     // Use the correct base URL from Laravel
-    const baseUrl = "{{ url('/') }}";
+    const baseUrl = "<?php echo e(url('/')); ?>";
     const url = `${baseUrl}/admin/payouts/${payoutId}`;
     
     console.log('Fetching payout details from:', url);
@@ -641,7 +620,7 @@ document.getElementById('submitReviewBtn').addEventListener('click', function() 
     });
     
     // Determine the correct URL based on action
-    const baseUrl = "{{ url('/') }}";
+    const baseUrl = "<?php echo e(url('/')); ?>";
     let url = '';
     if (action === 'approve') {
         url = `${baseUrl}/admin/payouts/${payoutId}/approve`;
@@ -727,7 +706,7 @@ function bulkAction(action) {
                 }
             });
             
-            const baseUrl = "{{ url('/') }}";
+            const baseUrl = "<?php echo e(url('/')); ?>";
             const url = `${baseUrl}/admin/payouts/bulk-action`;
             
             console.log('Submitting bulk action to:', url);
@@ -793,5 +772,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
-@endsection
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\rhyme_app\resources\views/admin/payouts/index.blade.php ENDPATH**/ ?>

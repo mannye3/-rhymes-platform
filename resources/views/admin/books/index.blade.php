@@ -50,7 +50,7 @@
                                                 </select>
                                             </div>
                                             <div class="form-wrap w-150px">
-                                                <select name="genre" class="form-select form-select-sm">
+                                                <select name="genre" class="form-select form-select-search">
                                                     <option value="">All Genres</option>
                                                     @foreach($genres as $genre)
                                                         <option value="{{ $genre }}" {{ request('genre') === $genre ? 'selected' : '' }}>
@@ -470,6 +470,15 @@
 
 @push('scripts')
 <script>
+    $(document).ready(function() {
+        $('select[name="genre"]').select2({
+            placeholder: "All Genres",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+</script>
+<script>
 // Store the route URL in a JavaScript variable
 const reviewBookRoute = "{{ route('admin.books.review', ['book' => 'BOOK_ID_PLACEHOLDER']) }}";
 
@@ -887,5 +896,4 @@ function forceDeleteBook(bookId) {
 
 
 </script>
-@endpush
 @endsection

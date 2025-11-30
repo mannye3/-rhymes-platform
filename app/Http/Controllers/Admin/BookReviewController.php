@@ -8,12 +8,19 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Book;
 use App\Services\Admin\BookReviewService;
+use App\Services\RevService;
 
 class BookReviewController extends Controller
 {
+    private BookReviewService $bookReviewService;
+    private RevService $revService;
+
     public function __construct(
-        private BookReviewService $bookReviewService
+        BookReviewService $bookReviewService,
+        RevService $revService
     ) {
+        $this->bookReviewService = $bookReviewService;
+        $this->revService = $revService;
         $this->middleware(['auth', 'role:admin']);
     }
 
@@ -42,7 +49,27 @@ class BookReviewController extends Controller
         }
         
         $books = $query->latest()->paginate(15);
-        $genres = Book::distinct()->pluck('genre')->filter()->sort();
+        
+        // Fetch categories from ERPREV API for genre filter
+        $categoriesResult = $this->revService->getItemCategories();
+        $genres = collect();
+        
+        if ($categoriesResult['success']) {
+            // Use the processed categories with both name and ID
+            $categories = $categoriesResult['categories'] ?? [];
+            foreach ($categories as $category) {
+                if (is_array($category) && isset($category['name'])) {
+                    $genres->push($category['name']);
+                } elseif (is_string($category)) {
+                    $genres->push($category);
+                }
+            }
+        }
+        
+        // If we couldn't fetch from API, use existing genres from database
+        if ($genres->isEmpty()) {
+            $genres = Book::distinct()->pluck('genre')->filter()->sort();
+        }
         
         return view('admin.books.index', compact('books', 'genres'));
     }

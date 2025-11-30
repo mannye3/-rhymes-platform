@@ -87,7 +87,7 @@
                                     </li>
 
                                     <li class="dropdown user-dropdown">
-                                        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                             <div class="user-toggle">
                                                 <div class="user-avatar sm">
                                                     <em class="icon ni ni-user-alt"></em>
@@ -110,12 +110,15 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="dropdown-inner">
+                                              <div class="dropdown-inner">
                                                 <ul class="link-list">
-                                                    <li><a href="{{ route('profile.edit') }}"><em class="icon ni ni-user-alt"></em><span>View Profile</span></a></li>
-                                                    <li><a href="{{ route('profile.edit') }}"><em class="icon ni ni-setting-alt"></em><span>Account Settings</span></a></li>
+                                                    <li><a href="{{ route('admin.profile.index') }}"><em class="icon ni ni-user-alt"></em><span>View Profile</span></a></li>
+                                                    {{-- <li><a href="{{ route('admin.settings') }}"><em class="icon ni ni-setting-alt"></em><span>Account Settings</span></a></li> --}}
                                                     <li><a href="#" id="loginActivityLink"><em class="icon ni ni-activity-alt"></em><span>Login Activity</span></a></li>
                                                     <li><a href="#" id="darkModeToggleProfile"><em class="icon ni ni-moon"></em><span>Dark Mode</span></a></li>
+                                                    @if(auth()->user()->hasRole('author'))
+                                                        <li><a href="/author/dashboard"><em class="icon ni ni-swap-alt"></em><span>Switch to Author</span></a></li>
+                                                    @endif
                                                 </ul>
                                             </div>
                                             <div class="dropdown-inner">
@@ -166,11 +169,151 @@
         </div>
     </div>
     
-    <!-- DashLite Scripts -->
-    <script src="./assets/js/bundle.js?ver=3.2.3"></script>
-    <script src="./assets/js/scripts.js?ver=3.2.3"></script>
+     <script src="{{ asset('assets/js/bundle.js?ver=3.2.3') }}"></script>
+    <script src="{{ asset('assets/js/scripts.js?ver=3.2.3') }}"></script>
+    <script src="{{ asset('assets/js/charts/chart-ecommerce.js?ver=3.2.3') }}"></script>
     
     <!-- Notifications Script -->
     <script src="{{ asset('js/notifications.js') }}"></script>
+    
+    <!-- Admin Custom Script -->
+    <script src="{{ asset('js/admin.js') }}"></script>
+    
+    <!-- SweetAlert2 Initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Display success message if session has 'success' key
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: '{{ session('success') }}',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            @endif
+
+            // Display error message if session has 'error' key
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: '{{ session('error') }}',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#e85347'
+                });
+            @endif
+
+            // Display warning message if session has 'warning' key
+            @if(session('warning'))
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning!',
+                    text: '{{ session('warning') }}',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#f4bd0e'
+                });
+            @endif
+
+            // Display info message if session has 'info' key
+            @if(session('info'))
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: '{{ session('info') }}',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            @endif
+            
+            // Global function to show SweetAlert messages
+            window.showSuccessMessage = function(message) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: message,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            };
+            
+            window.showErrorMessage = function(message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: message,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#e85347'
+                });
+            };
+            
+            window.showWarningMessage = function(message) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning!',
+                    text: message,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#f4bd0e'
+                });
+            };
+            
+            window.showInfoMessage = function(message) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: message,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            };
+            
+            // Confirm dialog function
+            window.confirmAction = function(message, callback) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e85347',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, proceed!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        callback();
+                    }
+                });
+            };
+        });
+    </script>
+    
+    @yield('scripts')
+    
+    <!-- Fix for dropdown issue -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure Bootstrap dropdowns are properly initialized
+            var dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl);
+            });
+        });
+    </script>
 </body>
 </html>

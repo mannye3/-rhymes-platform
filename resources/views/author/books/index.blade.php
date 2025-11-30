@@ -210,19 +210,15 @@
                                 <div class="form-group">
                                     <label class="form-label" for="genre">Genre</label>
                                     <div class="form-control-wrap">
-                                        <select class="form-select" id="genre" name="genre" required>
+                                        <select class="form-select form-select-search" id="genre" name="genre" required>
                                             <option value="">Select Genre</option>
-                                            <option value="Fiction" {{ old('genre') == 'Fiction' ? 'selected' : '' }}>Fiction</option>
-                                            <option value="Non-Fiction" {{ old('genre') == 'Non-Fiction' ? 'selected' : '' }}>Non-Fiction</option>
-                                            <option value="Romance" {{ old('genre') == 'Romance' ? 'selected' : '' }}>Romance</option>
-                                            <option value="Mystery" {{ old('genre') == 'Mystery' ? 'selected' : '' }}>Mystery</option>
-                                            <option value="Thriller" {{ old('genre') == 'Thriller' ? 'selected' : '' }}>Thriller</option>
-                                            <option value="Science Fiction" {{ old('genre') == 'Science Fiction' ? 'selected' : '' }}>Science Fiction</option>
-                                            <option value="Fantasy" {{ old('genre') == 'Fantasy' ? 'selected' : '' }}>Fantasy</option>
-                                            <option value="Biography" {{ old('genre') == 'Biography' ? 'selected' : '' }}>Biography</option>
-                                            <option value="Self-Help" {{ old('genre') == 'Self-Help' ? 'selected' : '' }}>Self-Help</option>
-                                            <option value="Business" {{ old('genre') == 'Business' ? 'selected' : '' }}>Business</option>
-                                            <option value="Other" {{ old('genre') == 'Other' ? 'selected' : '' }}>Other</option>
+                                            @foreach($categories as $category)
+                                                @if(is_array($category))
+                                                    <option value="{{ $category['name'] }}" {{ old('genre') == $category['name'] ? 'selected' : '' }} data-id="{{ $category['id'] }}">{{ $category['name'] }}</option>
+                                                @else
+                                                    <option value="{{ $category }}" {{ old('genre') == $category ? 'selected' : '' }}>{{ $category }}</option>
+                                                @endif
+                                            @endforeach
                                         </select>
                                         @error('genre')
                                             <span class="invalid-feedback" role="alert">{{ $message }}</span>
@@ -350,19 +346,15 @@
                                 <div class="form-group">
                                     <label class="form-label" for="edit_genre_{{$book->id}}">Genre</label>
                                     <div class="form-control-wrap">
-                                        <select class="form-select" id="edit_genre_{{$book->id}}" name="genre" required>
+                                        <select class="form-select form-select-search" id="edit_genre_{{$book->id}}" name="genre" required>
                                             <option value="">Select Genre</option>
-                                            <option value="Fiction" {{ $book->genre == 'Fiction' ? 'selected' : '' }}>Fiction</option>
-                                            <option value="Non-Fiction" {{ $book->genre == 'Non-Fiction' ? 'selected' : '' }}>Non-Fiction</option>
-                                            <option value="Romance" {{ $book->genre == 'Romance' ? 'selected' : '' }}>Romance</option>
-                                            <option value="Mystery" {{ $book->genre == 'Mystery' ? 'selected' : '' }}>Mystery</option>
-                                            <option value="Thriller" {{ $book->genre == 'Thriller' ? 'selected' : '' }}>Thriller</option>
-                                            <option value="Science Fiction" {{ $book->genre == 'Science Fiction' ? 'selected' : '' }}>Science Fiction</option>
-                                            <option value="Fantasy" {{ $book->genre == 'Fantasy' ? 'selected' : '' }}>Fantasy</option>
-                                            <option value="Biography" {{ $book->genre == 'Biography' ? 'selected' : '' }}>Biography</option>
-                                            <option value="Self-Help" {{ $book->genre == 'Self-Help' ? 'selected' : '' }}>Self-Help</option>
-                                            <option value="Business" {{ $book->genre == 'Business' ? 'selected' : '' }}>Business</option>
-                                            <option value="Other" {{ $book->genre == 'Other' ? 'selected' : '' }}>Other</option>
+                                            @foreach($categories as $category)
+                                                @if(is_array($category))
+                                                    <option value="{{ $category['name'] }}" {{ $book->genre == $category['name'] ? 'selected' : '' }} data-id="{{ $category['id'] }}">{{ $category['name'] }}</option>
+                                                @else
+                                                    <option value="{{ $category }}" {{ $book->genre == $category ? 'selected' : '' }}>{{ $category }}</option>
+                                                @endif
+                                            @endforeach
                                         </select>
                                         @error('genre')
                                             <span class="invalid-feedback" role="alert">{{ $message }}</span>
@@ -563,120 +555,19 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize DataTable safely (destroy if already exists)
-        // if (typeof $.fn.DataTable !== 'undefined') {
-        //     if ($.fn.DataTable.isDataTable('.datatable-init')) {
-        //         $('.datatable-init').DataTable().destroy();
-        //     }
-
-        //     $('.datatable-init').DataTable({
-        //         responsive: true,
-        //         pageLength: 10,
-        //         order: [[6, 'desc']], // Sort by submitted date
-        //         retrieve: true // reuse if already initialized
-        //     });
-        // }
-
-        // Show success message with SweetAlert
-        @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: '{{ session('success') }}',
-                showConfirmButton: false,
-                timer: 3000
-            });
-        @endif
-
-        // Show error message with SweetAlert
-        @if(session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: '{{ session('error') }}',
-                showConfirmButton: true
-            });
-        @endif
-
-        // Show validation errors with SweetAlert
-        @if($errors->any())
-            let errorMessages = '';
-            @foreach($errors->all() as $error)
-                errorMessages += '{{ $error }}\n';
-            @endforeach
-            
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Errors',
-                text: errorMessages,
-                showConfirmButton: true
-            });
-        @endif
+    $(document).ready(function() {
+        // Initialize Select2 for all genre dropdowns
+        $('#genre').select2({
+            placeholder: "Select Genre",
+            allowClear: true,
+            width: '100%'
+        });
+        
+        $('[id^="edit_genre_"]').select2({
+            placeholder: "Select Genre",
+            allowClear: true,
+            width: '100%'
+        });
     });
-
-    // Delete book function with SweetAlert confirmation
-    function deleteBook(bookId, bookTitle) {
-        Swal.fire({
-            title: 'Delete Book?',
-            text: `Are you sure you want to delete "${bookTitle}"? This action can be undone by restoring the book.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Create a form and submit it
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/author/books/${bookId}`;
-                
-                const methodInput = document.createElement('input');
-                methodInput.type = 'hidden';
-                methodInput.name = '_method';
-                methodInput.value = 'DELETE';
-                
-                const tokenInput = document.createElement('input');
-                tokenInput.type = 'hidden';
-                tokenInput.name = '_token';
-                tokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                
-                form.appendChild(methodInput);
-                form.appendChild(tokenInput);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
-
-    function restoreBook(bookId, bookTitle) {
-        Swal.fire({
-            title: 'Restore Book?',
-            text: `Are you sure you want to restore "${bookTitle}"?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, restore it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Create a form and submit it
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/author/books/${bookId}/restore`;
-                
-                const tokenInput = document.createElement('input');
-                tokenInput.type = 'hidden';
-                tokenInput.name = '_token';
-                tokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                
-                form.appendChild(tokenInput);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
 </script>
-
-@endpush            
+@endpush

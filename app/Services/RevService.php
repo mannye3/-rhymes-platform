@@ -63,17 +63,20 @@ class RevService
             $payload = [
                 'parameters' => [
                     'Name' => $book->title,
+                    'Description' => $book->description,
+                    'Taxable' => "1",
+                    'Price' => (string)number_format($book->price, 2, '.', ''),
+                    'Measure' => 'PCS',
                     'Barcode' => $book->isbn,
                     'Category' => $book->genre ?? 'Books',
-                    'Description' => $book->description,
-                    'Price' => (float)$book->price,
-                    'Taxable' => 0,  // Integer: 0 or 1
-                    'Measure' => 'pcs',
-                    // Additional custom fields
-                    'book_type' => $book->book_type,
-                    'author' => $book->user->name,
+                    'CategoryID' => $book->genre_id ?? '1',
+                    'Class' => 'N/A',
+                    'ClassID' => '1'
                 ]
             ];
+
+
+
 
             Log::info('ERPREV registerProduct - Sending request', [
                 'book_id' => $book->id,
@@ -310,6 +313,49 @@ class RevService
             }
         } catch (\Exception $e) {
             $this->logSync('sales', 'error', $e->getMessage(), $filters);
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get item categories from ERPREV for use as book genres
+     */
+    public function getItemCategories()
+    {
+        if (!$this->enabled) {
+            return ['success' => false, 'message' => 'ERPREV sync is disabled'];
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => $this->getAuthHeader(),
+                'Accept' => 'application/json',
+            ])->timeout(30)->get($this->baseUrl . '/item-category-view/json/');
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                // Process the categories to extract both name and ID
+                $processedCategories = [];
+                if (isset($data['records']) && is_array($data['records'])) {
+                    foreach ($data['records'] as $record) {
+                        $processedCategories[] = [
+                            'id' => $record['CategoryID'] ?? $record['category_id'] ?? null,
+                            'name' => $record['Name'] ?? $record['name'] ?? null
+                        ];
+                    }
+                }
+                
+                $this->logSync('categories', 'success', 'Item categories fetched successfully', [
+                    'count' => count($processedCategories)
+                ]);
+
+                return ['success' => true, 'data' => $data, 'categories' => $processedCategories];
+            } else {
+                throw new \Exception('ERPREV API error: ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            $this->logSync('categories', 'error', $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }

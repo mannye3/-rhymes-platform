@@ -65,20 +65,15 @@
                                             <div class="form-group">
                                                 <label class="form-label" for="genre">Genre <span class="text-danger">*</span></label>
                                                 <div class="form-control-wrap">
-                                                    <select class="form-select @error('genre') error @enderror" id="genre" name="genre" required>
+                                                    <select class="form-select form-select-search @error('genre') error @enderror" id="genre" name="genre" required>
                                                         <option value="">Select Genre</option>
-                                                        <option value="Fiction" {{ old('genre', $book->genre) == 'Fiction' ? 'selected' : '' }}>Fiction</option>
-                                                        <option value="Non-Fiction" {{ old('genre', $book->genre) == 'Non-Fiction' ? 'selected' : '' }}>Non-Fiction</option>
-                                                        <option value="Mystery" {{ old('genre', $book->genre) == 'Mystery' ? 'selected' : '' }}>Mystery</option>
-                                                        <option value="Romance" {{ old('genre', $book->genre) == 'Romance' ? 'selected' : '' }}>Romance</option>
-                                                        <option value="Sci-Fi" {{ old('genre', $book->genre) == 'Sci-Fi' ? 'selected' : '' }}>Science Fiction</option>
-                                                        <option value="Fantasy" {{ old('genre', $book->genre) == 'Fantasy' ? 'selected' : '' }}>Fantasy</option>
-                                                        <option value="Biography" {{ old('genre', $book->genre) == 'Biography' ? 'selected' : '' }}>Biography</option>
-                                                        <option value="Business" {{ old('genre', $book->genre) == 'Business' ? 'selected' : '' }}>Business</option>
-                                                        <option value="Self-Help" {{ old('genre', $book->genre) == 'Self-Help' ? 'selected' : '' }}>Self-Help</option>
-                                                        <option value="Health" {{ old('genre', $book->genre) == 'Health' ? 'selected' : '' }}>Health</option>
-                                                        <option value="History" {{ old('genre', $book->genre) == 'History' ? 'selected' : '' }}>History</option>
-                                                        <option value="Travel" {{ old('genre', $book->genre) == 'Travel' ? 'selected' : '' }}>Travel</option>
+                                                        @foreach($categories as $category)
+                                                            @if(is_array($category))
+                                                                <option value="{{ $category['name'] }}" {{ old('genre', $book->genre) == $category['name'] ? 'selected' : '' }} data-id="{{ $category['id'] }}">{{ $category['name'] }}</option>
+                                                            @else
+                                                                <option value="{{ $category }}" {{ old('genre', $book->genre) == $category ? 'selected' : '' }}>{{ $category }}</option>
+                                                            @endif
+                                                        @endforeach
                                                     </select>
                                                     @error('genre')
                                                         <span class="form-note-error">{{ $message }}</span>
@@ -204,3 +199,15 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#genre').select2({
+            placeholder: "Select Genre",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+</script>
+@endpush

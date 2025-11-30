@@ -151,11 +151,31 @@ class DemoDataSeeder extends Seeder
             $users[] = $addUser;
         }
 
-        // Create sample books for authors
+        // Create sample books for authors using ERPRev categories
         $books = [];
         
-        // Genres for variety
-        $genres = ['Fiction', 'Business', 'Mystery', 'Science Fiction', 'Romance', 'Cooking', 'Biography', 'History', 'Fantasy', 'Thriller'];
+        // Initialize RevService to get categories
+        $revService = new \App\Services\RevService();
+        $categoriesResult = $revService->getItemCategories();
+        
+        // Get categories from ERPRev or use defaults
+        $genres = [];
+        if ($categoriesResult['success']) {
+            $categories = $categoriesResult['categories'] ?? [];
+            foreach ($categories as $category) {
+                if (is_array($category)) {
+                    $genres[] = $category['name'];
+                } else {
+                    $genres[] = $category;
+                }
+            }
+        }
+        
+        // If we couldn't fetch from API, use default categories
+        if (empty($genres)) {
+            $genres = ['Fiction', 'Business', 'Mystery', 'Science Fiction', 'Romance', 'Cooking', 'Biography', 'History', 'Fantasy', 'Thriller'];
+        }
+        
         $statuses = ['pending', 'accepted', 'stocked'];
         $types = ['digital', 'physical', 'both'];
         

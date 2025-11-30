@@ -5,13 +5,20 @@ namespace App\Http\Controllers\Author;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\BookService;
+use App\Services\RevService;
 use App\Models\Book;
 
 class BookController extends Controller
 {
+    private BookService $bookService;
+    private RevService $revService;
+
     public function __construct(
-        private BookService $bookService
+        BookService $bookService,
+        RevService $revService
     ) {
+        $this->bookService = $bookService;
+        $this->revService = $revService;
         $this->middleware(['auth', 'role:author|admin']);
     }
 
@@ -22,7 +29,34 @@ class BookController extends Controller
     {
         $user = auth()->user();
         $books = $this->bookService->getUserBooks($user);
-        return view('author.books.index', compact('books'));
+        
+        // Fetch categories from ERPREV API
+        $categoriesResult = $this->revService->getItemCategories();
+        $categories = [];
+        
+        if ($categoriesResult['success']) {
+            // Use the processed categories with both name and ID
+            $categories = $categoriesResult['categories'] ?? [];
+        }
+        
+        // If we couldn't fetch from API, use default categories
+        if (empty($categories)) {
+            $defaultCategories = [
+                'Fiction', 'Non-Fiction', 'Mystery', 'Romance', 'Science Fiction',
+                'Fantasy', 'Biography', 'Business', 'Self-Help', 'Health',
+                'History', 'Travel'
+            ];
+            
+            // Format default categories to match the new structure
+            foreach ($defaultCategories as $category) {
+                $categories[] = [
+                    'id' => null,
+                    'name' => $category
+                ];
+            }
+        }
+        
+        return view('author.books.index', compact('books', 'categories'));
     }
 
     /**
@@ -30,7 +64,33 @@ class BookController extends Controller
      */
     public function create()
     {
-        return view('author.books.create');
+        // Fetch categories from ERPREV API
+        $categoriesResult = $this->revService->getItemCategories();
+        $categories = [];
+        
+        if ($categoriesResult['success']) {
+            // Use the processed categories with both name and ID
+            $categories = $categoriesResult['categories'] ?? [];
+        }
+        
+        // If we couldn't fetch from API, use default categories
+        if (empty($categories)) {
+            $defaultCategories = [
+                'Fiction', 'Non-Fiction', 'Mystery', 'Romance', 'Science Fiction',
+                'Fantasy', 'Biography', 'Business', 'Self-Help', 'Health',
+                'History', 'Travel'
+            ];
+            
+            // Format default categories to match the new structure
+            foreach ($defaultCategories as $category) {
+                $categories[] = [
+                    'id' => null,
+                    'name' => $category
+                ];
+            }
+        }
+        
+        return view('author.books.create', compact('categories'));
     }
 
     /**
@@ -65,7 +125,34 @@ class BookController extends Controller
     public function edit(Book $book)
     {
         $this->authorize('update', $book);
-        return view('author.books.edit', compact('book'));
+        
+        // Fetch categories from ERPREV API
+        $categoriesResult = $this->revService->getItemCategories();
+        $categories = [];
+        
+        if ($categoriesResult['success']) {
+            // Use the processed categories with both name and ID
+            $categories = $categoriesResult['categories'] ?? [];
+        }
+        
+        // If we couldn't fetch from API, use default categories
+        if (empty($categories)) {
+            $defaultCategories = [
+                'Fiction', 'Non-Fiction', 'Mystery', 'Romance', 'Science Fiction',
+                'Fantasy', 'Biography', 'Business', 'Self-Help', 'Health',
+                'History', 'Travel'
+            ];
+            
+            // Format default categories to match the new structure
+            foreach ($defaultCategories as $category) {
+                $categories[] = [
+                    'id' => null,
+                    'name' => $category
+                ];
+            }
+        }
+        
+        return view('author.books.edit', compact('book', 'categories'));
     }
 
     /**

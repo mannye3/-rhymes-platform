@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             DemoDataSeeder::class,
             NotificationSeeder::class,
+            ERPRevBookSeeder::class,
         ]);
     }
 }
